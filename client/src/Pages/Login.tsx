@@ -30,7 +30,7 @@ const Login = () => {
             </div>
 
             <div className="login-card">
-                <h1 className="login-title">4 Kaca 5 Karta</h1>
+                <h1 className="login-title">Bura 4 Kaca 5 Karta</h1>
                 <h2 className="login-sub-title">Welcome!</h2>
                 <p className="login-subtitle">Sign in to continue to your account</p>
 
