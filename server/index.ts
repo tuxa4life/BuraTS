@@ -3,6 +3,8 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
+import { getRooms } from './src/game.js'
+import type { Room } from './types.js'
 
 const app = express()
 app.use(cors())
@@ -16,13 +18,16 @@ server.listen(PORT, () => {
     console.log('Type "help" for available commands\n')
 })
 
-const rooms = {}
-
+const rooms: Record<string, Room> = {}
 io.on('connection', (socket: Socket) => {
     console.log(`> Client Connected: ${socket.id.slice(0, 6)}`)
 
-    socket.on('disconnect', (): void => {
+    socket.on('disconnect', () => {
         console.log(`< Client Disconnected: ${socket.id.slice(0, 6)}`)
+    })
+
+    socket.on('get-room-list', () => {
+        socket.emit('room-list', getRooms(rooms))
     })
 })
 
