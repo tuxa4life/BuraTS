@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect } from 'react'
 import { io } from 'socket.io-client'
 
-const socket = io('http://localhost:5000')
+const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
 const SocketContext = createContext(null)
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
