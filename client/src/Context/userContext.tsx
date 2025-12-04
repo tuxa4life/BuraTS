@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type User = {
     id: string
@@ -6,13 +7,14 @@ type User = {
     picture: string
 }
 
-interface UserContextType {
+interface UserContextInterface {
     user: User | null
     isLoggedIn: boolean
     setUser(user: User): void
+    logOut(): void
 }
 
-const UserContext = createContext<UserContextType | null>(null)
+const UserContext = createContext<UserContextInterface | null>(null)
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser_] = useState<User | null>(() => {
@@ -20,6 +22,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return saved ? JSON.parse(saved) : null
     })
 
+    const navigate = useNavigate()
     const isLoggedIn = !!user
 
     const setUser = (user: User | null): void => {
@@ -29,7 +32,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUser_(user)
     }
 
-    return <UserContext.Provider value={{ user, isLoggedIn, setUser }}>{children}</UserContext.Provider>
+    const logOut = (): void => {
+        setUser_(null)
+        localStorage.removeItem('user')
+        navigate('/login')
+    }
+
+    return <UserContext.Provider value={{ user, isLoggedIn, setUser, logOut }}>{children}</UserContext.Provider>
 }
 
 export const useUser = () => {

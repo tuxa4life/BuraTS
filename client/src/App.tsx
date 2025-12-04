@@ -3,6 +3,7 @@ import Login from './Pages/Login'
 import { useEffect } from 'react'
 import { useUser } from './Context/userContext'
 import Home from './Pages/Home'
+import './styles/vars.css'
 
 const App = () => {
     const { isLoggedIn } = useUser()
