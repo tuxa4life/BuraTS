@@ -1,5 +1,5 @@
 // Entities
-type Player = {
+export type Player = {
     id: string,
     name: string,
     hand: string[],
@@ -8,7 +8,7 @@ type Player = {
     points: number
 }
 
-type Room = {
+export type Room = {
     id: string,
     players: Player[],
     deck: string[],
@@ -18,10 +18,10 @@ type Room = {
 }
 
 // Cards
-enum Suite { spades, heart, clubs, diamonds }
-type Card = {
+export enum Suite { spades = 'spades', heart = 'heart', clubs = 'clubs', diamonds = 'diamonds' }
+export type Card = {
     suite: Suite,
     value: string,
-    getName(): string
+    name: string
 }
 

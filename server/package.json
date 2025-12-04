@@ -1,23 +1,25 @@
 {
-  "name": "bura-serverside",
-  "version": "1.0.0",
-  "description": "Back-end for BuraTS",
-  "license": "MIT",
-  "author": "Nikoloz Tukhashvili",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "nodemon": "^3.1.11",
-    "socket.io": "^4.8.1"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
-  }
+    "name": "bura-serverside",
+    "version": "1.0.0",
+    "description": "Back-end for BuraTS",
+    "license": "MIT",
+    "author": "Nikoloz Tukhashvili",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "dev": "nodemon --exec tsx index.ts",
+        "start": "tsx index.ts"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^5.1.0",
+        "socket.io": "^4.8.1"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "nodemon": "^3.1.11",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    }
 }

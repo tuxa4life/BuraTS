@@ -1,4 +1,6 @@
-export const generateKeys = (): Card[] => {
+import { type Card, Suite } from '../types.js'
+
+const generateKeys = (): Card[] => {
     const suites = [Suite.spades, Suite.heart, Suite.clubs, Suite.diamonds]
     const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
@@ -9,9 +11,7 @@ export const generateKeys = (): Card[] => {
             const card: Card = {
                 suite,
                 value,
-                getName: () => {
-                    return `${suite}_${value}`
-                },
+                name: `${suite}_${value}`
             }
 
             keys.push(card)
@@ -20,3 +20,5 @@ export const generateKeys = (): Card[] => {
 
     return keys
 }
+
+export { generateKeys }

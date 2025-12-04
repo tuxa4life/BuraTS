@@ -1,3 +1,5 @@
+import { type Room, type Player } from '../types.js'
+
 const createRoom = (id: string): Room => {
     const room = {
         id,

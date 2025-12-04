@@ -1,12 +1,14 @@
+import type { Server as SocketIOServer } from 'socket.io'
 import readline from 'readline'
+import type { Room } from '../types.js'
 
 export const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: ''
+    prompt: '',
 })
 
-export const logOutputs = (command, io, rooms) => {
+export const logOutputs = (command: string, io: SocketIOServer, rooms: Record<string, Room>): void => {
     switch (command) {
         case 'clients':
             const sockets = Array.from(io.sockets.sockets.values())
@@ -22,7 +24,7 @@ export const logOutputs = (command, io, rooms) => {
             console.log('Available commands:')
             console.log('  clients  - List connected clients')
             console.log('  rooms    - Show rooms object')
-            console.log('  roomID    - Show specific room object')
+            console.log('  roomID   - Show specific room object')
             console.log('  clear    - Clear console')
             console.log('  help     - Show this help message')
             console.log('  exit     - Shutdown server')
@@ -37,7 +39,7 @@ export const logOutputs = (command, io, rooms) => {
             process.exit(0)
             break
 
-         default:
+        default:
             if (rooms[command]) {
                 console.log(`Room "${command}":`, rooms[command])
             } else if (command.trim()) {
