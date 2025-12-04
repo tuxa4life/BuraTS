@@ -3,8 +3,7 @@ import { io } from 'socket.io-client'
 
 const socket = io('http://localhost:5000')
 
-type SocketContextType = {}
-const SocketContext = createContext<SocketContextType | null>(null)
+const SocketContext = createContext(null)
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         socket.on('connect', () => {
@@ -21,7 +20,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
-    const data = {}
+    const data = null
     return <SocketContext.Provider value={data}>
         {children}
     </SocketContext.Provider>
