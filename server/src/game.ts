@@ -25,3 +25,8 @@ const createPlayer = (id: string, name: string): Player => {
 
     return player
 }
+
+const playerJoin = (player: Player, roomID: string, rooms: Record<string, Room>): void => {
+    if (!rooms[roomID]) rooms[roomID] = createRoom(roomID)
+    rooms[roomID].players.push(player)
+}
