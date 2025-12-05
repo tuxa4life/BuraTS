@@ -7,12 +7,12 @@ import { UserProvider } from './Context/userContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
-        <UserProvider>
-            <SocketProvider>
+        <SocketProvider>
+            <UserProvider>
                 <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
                     <App />
                 </GoogleOAuthProvider>
-            </SocketProvider>
-        </UserProvider>
+            </UserProvider>
+        </SocketProvider>
     </BrowserRouter>
 )

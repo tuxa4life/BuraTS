@@ -13,10 +13,11 @@ const createRoom = (id: string): Room => {
     return room
 }
 
-const createPlayer = (id: string, name: string): Player => {
+const createPlayer = (id: string, username: string, picture: string): Player => {
     const player = {
         id,
-        name,
+        username,
+        picture,
         hand: [],
         played: [],
         taken: [],
@@ -28,7 +29,7 @@ const createPlayer = (id: string, name: string): Player => {
 
 const playerJoin = (player: Player, roomID: string, rooms: Record<string, Room>): void => {
     if (!rooms[roomID]) rooms[roomID] = createRoom(roomID)
-    rooms[roomID].players.push(player)
+    rooms[roomID].players.push(createPlayer(player.id, player.username, player.picture))
 }
 
 const getRooms = (rooms: Record<string, Room>) => {
@@ -42,4 +43,4 @@ const getRooms = (rooms: Record<string, Room>) => {
     return output
 }
 
-export { getRooms }
+export { getRooms, playerJoin }

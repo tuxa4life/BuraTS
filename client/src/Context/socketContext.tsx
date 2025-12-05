@@ -7,6 +7,8 @@ const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 interface SocketContextInterface {
     rooms: Room[]
     getRooms(): void
+    registerOnSockets(id: string): void
+    createRoom(roomID: string): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -17,10 +19,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         socket.on('connect', () => {
             console.log('Connected!')
-        })
 
-        socket.on('test', (data) => {
-            console.log(data)
+            const savedUser = localStorage.getItem('user')
+            if (savedUser) {
+                const user = JSON.parse(savedUser)
+                socket.emit('user-registered', user.id)
+            }
         })
 
         socket.on('room-list', (rooms: Room[]) => {
@@ -29,17 +33,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
         return () => {
             socket.off('connect')
-            socket.off('test')
+            socket.off('room-list')
         }
     }, [])
 
     const getRooms = () => socket.emit('get-room-list')
+    const registerOnSockets = (id: string) => {
+        if (socket.connected) {
+            socket.emit('user-registered', id)
+        }
+    }
 
-    return (
-        <SocketContext.Provider value={{ rooms, getRooms }}>
-            {children}
-        </SocketContext.Provider>
-    )
+    const createRoom = (roomID: string) => {
+        const user = localStorage.getItem('user')
+        if(!user) {
+            alert('MUST BE REGISTERED')
+            return
+        }
+
+        socket.emit('create-room', { roomID, user: JSON.parse(user) })
+    }
+
+    return <SocketContext.Provider value={{ rooms, getRooms, registerOnSockets, createRoom }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

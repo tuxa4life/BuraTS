@@ -1,7 +1,8 @@
 // Entities
 export type Player = {
     id: string,
-    name: string,
+    picture: string,
+    username: string,
     hand: string[],
     played: string[],
     taken: string[],

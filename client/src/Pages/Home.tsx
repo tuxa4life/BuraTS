@@ -1,17 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useUser } from '../Context/userContext'
 import '../styles/home.css'
 import type { Room } from '../types'
 import { useSockets } from '../Context/socketContext'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
     const [roomId, setRoomId] = useState('')
     const { user, logOut } = useUser()
-    const { rooms } = useSockets()
+    const { rooms, createRoom, getRooms } = useSockets()
+    const navigate = useNavigate()
 
-    const createRoom = () => {
-        console.log('Create room with ID:', roomId)
+    useEffect(() => {
+        getRooms()
+    }, [])
+
+    const handleCreateRoom = () => {
+        createRoom(roomId)
         setRoomId('')
+        navigate(`/lobby/${roomId}`)
     }
 
     const joinRoom = (room: Room) => {
@@ -38,8 +45,8 @@ const Home = () => {
                     <h3 className="section-title">Create New Room</h3>
 
                     <div className="create-room-form">
-                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value)} placeholder="Enter room ID..." className="room-input" />
-                        <button onClick={createRoom} disabled={!roomId.trim()} className={`create-button ${!roomId.trim() ? 'disabled' : ''}`}>
+                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase())} placeholder="Enter room ID..." className="room-input" />
+                        <button onClick={handleCreateRoom} disabled={!roomId.trim()} className={`create-button ${!roomId.trim() ? 'disabled' : ''}`}>
                             Create Room
                         </button>
                     </div>
