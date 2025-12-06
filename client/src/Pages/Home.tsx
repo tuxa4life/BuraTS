@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react'
 import { useUser } from '../Context/userContext'
-import '../styles/home.css'
-import type { Room } from '../types'
 import { useSockets } from '../Context/socketContext'
 import { useNavigate } from 'react-router-dom'
+import '../styles/home.css'
 
 const Home = () => {
     const [roomId, setRoomId] = useState('')
     const { user, logOut } = useUser()
-    const { rooms, createRoom, getRooms } = useSockets()
+    const { rooms, joinRoom, getRooms } = useSockets()
     const navigate = useNavigate()
-
+    
     useEffect(() => {
         getRooms()
     }, [])
 
     const handleCreateRoom = () => {
-        createRoom(roomId)
+        joinRoom(roomId)
         setRoomId('')
         navigate(`/lobby/${roomId}`)
     }
 
-    const joinRoom = (room: Room) => {
-        console.log('Join room:', room.id)
+    const handleRoomJoin = (roomID: string) => {
+        joinRoom(roomID)
+        navigate(`/lobby/${roomID}`)
     }
 
     if (!user) {
@@ -67,7 +67,7 @@ const Home = () => {
                                     </div>
                                 </div>
 
-                                <button onClick={() => joinRoom(room)} className="join-button">
+                                <button onClick={() => handleRoomJoin(room.id)} className="join-button">
                                     Join Room
                                 </button>
                             </div>

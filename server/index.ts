@@ -3,7 +3,7 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { getRooms, playerJoin } from './src/game.js'
+import { disconnectPlayer, getRooms, leaveRoom, playerJoin } from './src/game.js'
 import type { Player, Room } from './types.js'
 
 const app = express()
@@ -24,13 +24,19 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('disconnect', () => {
         console.log(`< Client Disconnected: ${socket.id.slice(0, 6)}`)
+        const affectedRooms = Object.keys(rooms).filter((rID) => {
+            const room = rooms[rID]
+            if (!room) return false
+            return room.players.some((p) => p.id === socket.data.id)
+        })
 
-        Object.keys(rooms).forEach((roomId: string) => {
-            const room = rooms[roomId]
-            if (!room) return
-            room.players = room.players.filter((player) => player.id !== socket.data.id)
+        disconnectPlayer(socket, rooms)
+        io.emit('room-list', getRooms(rooms))
 
-            if (room.players.length === 0) delete rooms[roomId]
+        affectedRooms.forEach((roomID) => {
+            if (roomID && rooms[roomID]) {
+                io.to(roomID).emit('game-data', rooms[roomID])
+            }
         })
     })
 
@@ -42,9 +48,15 @@ io.on('connection', (socket: Socket) => {
         socket.emit('room-list', getRooms(rooms))
     })
 
-    socket.on('create-room', ({ roomID, user }: { roomID: string; user: Player }) => {
-        playerJoin(user, roomID, rooms)
+    socket.on('join-room', ({ roomID, user }: { roomID: string; user: Player }) => {
+        playerJoin(user, roomID, rooms, socket)
         io.emit('room-list', getRooms(rooms))
+        io.to(roomID).emit('game-data', rooms[roomID])
+    })
+
+    socket.on('leave-room', (roomID: string) => {
+        leaveRoom(socket, roomID, rooms)
+        io.to(roomID).emit('game-data', rooms[roomID])
     })
 })
 

@@ -1,20 +1,23 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
-import type { Room } from '../types'
+import type { Game, Room } from '../types'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
 interface SocketContextInterface {
-    rooms: Room[]
+    rooms: Room[],
+    game: Game | null
     getRooms(): void
     registerOnSockets(id: string): void
-    createRoom(roomID: string): void
+    joinRoom(roomID: string): void
+    leaveRoom(roomID: string): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [rooms, setRooms] = useState<Room[]>([])
+    const [game, setGame] = useState<Game | null>(null)
 
     useEffect(() => {
         socket.on('connect', () => {
@@ -31,6 +34,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             setRooms(rooms)
         })
 
+        socket.on('game-data', (data: Game) => {
+            setGame(data)
+        })
+
         return () => {
             socket.off('connect')
             socket.off('room-list')
@@ -44,17 +51,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    const createRoom = (roomID: string) => {
+    const joinRoom = (roomID: string) => {
         const user = localStorage.getItem('user')
         if(!user) {
             alert('MUST BE REGISTERED')
             return
         }
 
-        socket.emit('create-room', { roomID, user: JSON.parse(user) })
+        socket.emit('join-room', { roomID, user: JSON.parse(user) })
     }
 
-    return <SocketContext.Provider value={{ rooms, getRooms, registerOnSockets, createRoom }}>{children}</SocketContext.Provider>
+    const leaveRoom = (roomID: string) => {
+        socket.emit('leave-room', roomID)
+    }
+
+    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {
