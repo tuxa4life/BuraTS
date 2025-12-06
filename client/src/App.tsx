@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useUser } from './Context/userContext'
 import Home from './Pages/Home'
 import './styles/vars.css'
-import Game from './Pages/Game'
+import Game from './Pages/Lobby'
 
 const App = () => {
     const { isLoggedIn } = useUser()
