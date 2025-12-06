@@ -1,16 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/game.css'
 import { useSockets } from '../Context/socketContext'
 import { useUser } from '../Context/userContext'
 import { useNavigate, useParams } from 'react-router-dom'
 
 const Game = () => {
-    const { game, leaveRoom } = useSockets()
+    const { game, leaveRoom, joinRoom } = useSockets()
     const { user } = useUser()
     const [copied, setCopied] = useState(false)
 
     const navigate = useNavigate()
     const { roomID } = useParams()
+
+    useEffect(() => {
+        if (roomID && !game && user) {
+            joinRoom(roomID)
+        }
+    }, [roomID, game, user, joinRoom])
 
     if (!game) {
         return (

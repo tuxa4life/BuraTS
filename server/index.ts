@@ -26,6 +26,7 @@ io.on('connection', (socket: Socket) => {
         socket.data.id = data.id
         socket.data.username = data.username
         socket.data.picture = data.picture
+        console.log(`User registered: ${data.username} (${socket.id.slice(0, 6)})`)
     })
 
     socket.on('get-room-list', () => {
@@ -33,6 +34,20 @@ io.on('connection', (socket: Socket) => {
     })
 
     socket.on('join-room', (roomID: string) => {
+        if (rooms[roomID]?.players.length === 4) return
+        if (!socket.data.id) {
+            console.log(`Warning: join-room called without user registration for ${socket.id.slice(0, 6)}`)
+            socket.emit('error', { message: 'User not registered' })
+            return
+        }
+
+        const room = rooms[roomID]
+        if (room && room.players.some((p) => p.id === socket.data.id)) {
+            console.log(`User ${socket.data.username} already in room ${roomID}`)
+            io.to(roomID).emit('game-data', rooms[roomID])
+            return
+        }
+
         playerJoin(socket, roomID, rooms)
         io.emit('room-list', getRooms(rooms))
         io.to(roomID).emit('game-data', rooms[roomID])

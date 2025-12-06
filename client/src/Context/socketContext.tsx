@@ -18,6 +18,7 @@ const SocketContext = createContext<SocketContextInterface | undefined>(undefine
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [rooms, setRooms] = useState<Room[]>([])
     const [game, setGame] = useState<Game | null>(null)
+    const [isRegistered, setIsRegistered] = useState(false)
 
     useEffect(() => {
         socket.on('connect', () => {
@@ -27,6 +28,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             if (savedUser) {
                 const user = JSON.parse(savedUser)
                 socket.emit('user-registered', user)
+                setIsRegistered(true)
             }
         })
 
@@ -41,12 +43,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         return () => {
             socket.off('connect')
             socket.off('room-list')
+            socket.off('game-data')
         }
     }, [])
 
     const getRooms = () => socket.emit('get-room-list')
+    
     const registerOnSockets = (user: User) => {
         socket.emit('user-registered', user)
+        setIsRegistered(true)
     }
 
     const joinRoom = (roomID: string) => {
@@ -54,6 +59,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         if(!user) {
             alert('MUST BE REGISTERED')
             return
+        }
+
+        if (!isRegistered) {
+            const userData = JSON.parse(user)
+            socket.emit('user-registered', userData)
+            setIsRegistered(true)
         }
 
         socket.emit('join-room', roomID)
