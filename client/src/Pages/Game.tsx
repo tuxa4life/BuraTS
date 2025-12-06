@@ -13,6 +13,7 @@ const Game = () => {
     const { roomID } = useParams()
 
     if (!game) {
+        navigate('/')
         return <div>Loading...</div>
     }
 
@@ -31,7 +32,7 @@ const Game = () => {
 
     const handleLeaveRoom = () => {
         if (roomID) {
-            leaveRoom(roomID)
+            leaveRoom()
             navigate('/')
         }
     }

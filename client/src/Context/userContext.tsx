@@ -1,12 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSockets } from './socketContext'
-
-type User = {
-    id: string
-    username: string
-    picture: string
-}
+import type { User } from '../types'
 
 interface UserContextInterface {
     user: User | null
@@ -18,19 +13,19 @@ interface UserContextInterface {
 const UserContext = createContext<UserContextInterface | null>(null)
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+    const { registerOnSockets } = useSockets()
+    const navigate = useNavigate()
+    
     const [user, setUser_] = useState<User | null>(() => {
         const saved = localStorage.getItem('user')
         return saved ? JSON.parse(saved) : null
     })
     const isLoggedIn = !!user
 
-    const navigate = useNavigate()
-    const { registerOnSockets } = useSockets()
-
     const setUser = (user: User | null): void => {
         if (user) {
             localStorage.setItem('user', JSON.stringify(user))
-            registerOnSockets(user.id)
+            registerOnSockets(user)
         }
         else localStorage.removeItem('user')
         

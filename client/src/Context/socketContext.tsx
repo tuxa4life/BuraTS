@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
-import type { Game, Room } from '../types'
+import type { Game, Room, User } from '../types'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
@@ -8,9 +8,9 @@ interface SocketContextInterface {
     rooms: Room[],
     game: Game | null
     getRooms(): void
-    registerOnSockets(id: string): void
+    registerOnSockets(user: User): void
     joinRoom(roomID: string): void
-    leaveRoom(roomID: string): void
+    leaveRoom(): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -26,7 +26,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             const savedUser = localStorage.getItem('user')
             if (savedUser) {
                 const user = JSON.parse(savedUser)
-                socket.emit('user-registered', user.id)
+                socket.emit('user-registered', user)
             }
         })
 
@@ -45,10 +45,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }, [])
 
     const getRooms = () => socket.emit('get-room-list')
-    const registerOnSockets = (id: string) => {
-        if (socket.connected) {
-            socket.emit('user-registered', id)
-        }
+    const registerOnSockets = (user: User) => {
+        socket.emit('user-registered', user)
     }
 
     const joinRoom = (roomID: string) => {
@@ -58,11 +56,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             return
         }
 
-        socket.emit('join-room', { roomID, user: JSON.parse(user) })
+        socket.emit('join-room', roomID)
     }
 
-    const leaveRoom = (roomID: string) => {
-        socket.emit('leave-room', roomID)
+    const leaveRoom = () => {
+        socket.emit('leave-room')
     }
 
     return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom }}>{children}</SocketContext.Provider>

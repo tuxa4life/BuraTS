@@ -28,18 +28,20 @@ const createPlayer = (id: string, username: string, picture: string): Player => 
     return player
 }
 
-const playerJoin = (player: Player, roomID: string, rooms: Record<string, Room>, socket: Socket): void => {
+const playerJoin = (socket: Socket, roomID: string, rooms: Record<string, Room>): void => {
     if (!rooms[roomID]) rooms[roomID] = createRoom(roomID)
 
-    const exists = rooms[roomID].players.some((player: Player) => player.id && player.id === socket.id)
+    const exists = rooms[roomID].players.some((player: Player) => socket.data.id && player.id === socket.id)
     if (exists) return
 
-    rooms[roomID].players.push(createPlayer(player.id, player.username, player.picture))
+    rooms[roomID].players.push(createPlayer(socket.data.id, socket.data.username, socket.data.picture))
     socket.join(roomID)
+    socket.data.roomID = roomID
 }
 
-const leaveRoom = (socket: Socket, roomID: string, rooms: Record<string, Room>) => {
+const leaveRoom = (socket: Socket, rooms: Record<string, Room>) => {
     const id = socket.data.id
+    const roomID = socket.data.roomID
     const room = rooms[roomID]
 
     if (room && room.players.find(p => p.id === id)) {

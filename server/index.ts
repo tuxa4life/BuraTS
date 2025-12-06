@@ -22,6 +22,29 @@ const rooms: Record<string, Room> = {}
 io.on('connection', (socket: Socket) => {
     console.log(`> Client Connected: ${socket.id.slice(0, 6)}`)
 
+    socket.on('user-registered', (data) => {
+        socket.data.id = data.id
+        socket.data.username = data.username
+        socket.data.picture = data.picture
+    })
+
+    socket.on('get-room-list', () => {
+        socket.emit('room-list', getRooms(rooms))
+    })
+
+    socket.on('join-room', (roomID: string) => {
+        playerJoin(socket, roomID, rooms)
+        io.emit('room-list', getRooms(rooms))
+        io.to(roomID).emit('game-data', rooms[roomID])
+    })
+
+    socket.on('leave-room', () => {
+        const roomID = socket.data.roomID
+
+        leaveRoom(socket, rooms)
+        io.to(roomID).emit('game-data', rooms[roomID])
+    })
+
     socket.on('disconnect', () => {
         console.log(`< Client Disconnected: ${socket.id.slice(0, 6)}`)
         const affectedRooms = Object.keys(rooms).filter((rID) => {
@@ -38,25 +61,6 @@ io.on('connection', (socket: Socket) => {
                 io.to(roomID).emit('game-data', rooms[roomID])
             }
         })
-    })
-
-    socket.on('user-registered', (id) => {
-        socket.data.id = id
-    })
-
-    socket.on('get-room-list', () => {
-        socket.emit('room-list', getRooms(rooms))
-    })
-
-    socket.on('join-room', ({ roomID, user }: { roomID: string; user: Player }) => {
-        playerJoin(user, roomID, rooms, socket)
-        io.emit('room-list', getRooms(rooms))
-        io.to(roomID).emit('game-data', rooms[roomID])
-    })
-
-    socket.on('leave-room', (roomID: string) => {
-        leaveRoom(socket, roomID, rooms)
-        io.to(roomID).emit('game-data', rooms[roomID])
     })
 })
 

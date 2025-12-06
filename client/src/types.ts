@@ -1,3 +1,9 @@
+export type User = {
+    id: string
+    username: string
+    picture: string
+}
+
 export type Room = {
     id: string
     playerCount: number
