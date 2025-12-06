@@ -45,7 +45,7 @@ const Home = () => {
                     <h3 className="section-title">Create New Room</h3>
 
                     <div className="create-room-form">
-                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase())} placeholder="Enter room ID..." className="room-input" />
+                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase().replace(' ', '').slice(0, 14))} placeholder="Enter room ID..." className="room-input" />
                         <button onClick={handleCreateRoom} disabled={!roomId.trim()} className={`create-button ${!roomId.trim() ? 'disabled' : ''}`}>
                             Create Room
                         </button>

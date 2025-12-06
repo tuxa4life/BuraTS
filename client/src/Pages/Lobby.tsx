@@ -13,17 +13,25 @@ const Game = () => {
     const { roomID } = useParams()
 
     if (!game) {
-        navigate('/')
-        return <div>Loading...</div>
+        return (
+            <div>
+                CANNOT FIND THE GAME. <u onClick={() => navigate('/')}>Click here to go back</u>
+            </div>
+        )
     }
 
     const isCreator = game.players[0]?.id === user?.id
     const canStart = game.players.length === 4
 
     const handleCopyRoomId = () => {
-        console.log('Copying room ID to clipboard:', game.id)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        const url = window.location.origin + `/lobby/${game.id}`
+        navigator.clipboard
+            .writeText(url)
+            .then(() => {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+            })
+            .catch(() => alert('cannot copy'))
     }
 
     const handleStartGame = () => {

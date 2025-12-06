@@ -43,6 +43,7 @@ io.on('connection', (socket: Socket) => {
 
         leaveRoom(socket, rooms)
         io.to(roomID).emit('game-data', rooms[roomID])
+        io.emit('room-list', getRooms(rooms))
     })
 
     socket.on('disconnect', () => {
