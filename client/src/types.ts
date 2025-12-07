@@ -27,3 +27,10 @@ export type Player = {
     taken: string[],
     points: number
 }
+
+export type Suite = 'spades' | 'heart' | 'clubs' | 'diamonds'
+export type Card = {
+    suite: Suite,
+    value: string,
+    name: string
+}

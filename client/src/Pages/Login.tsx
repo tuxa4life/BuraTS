@@ -3,6 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import '../styles/login.css'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../Context/userContext'
+import { useEffect } from 'react'
 
 interface JwtData {
     name: string
@@ -20,6 +21,10 @@ const Login = () => {
 
         navigate('/')
     }
+
+    useEffect(() => {
+        if (localStorage.getItem('user')) navigate('/')
+    }, [])
 
     return (
         <div className="login-container">

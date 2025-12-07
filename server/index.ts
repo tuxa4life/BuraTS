@@ -3,7 +3,7 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { disconnectPlayer, getRooms, leaveRoom, playerJoin } from './src/game.js'
+import { disconnectPlayer, getRooms, leaveRoom, playerJoin, startGame } from './src/game.js'
 import type { Player, Room } from './types.js'
 
 const app = express()
@@ -50,6 +50,15 @@ io.on('connection', (socket: Socket) => {
 
         playerJoin(socket, roomID, rooms)
         io.emit('room-list', getRooms(rooms))
+        io.to(roomID).emit('game-data', rooms[roomID])
+    })
+
+    socket.on('start-triggered', () => {
+        const roomID = socket.data.roomID
+        if (!rooms[roomID]) return
+
+        io.to(roomID).emit('start-game', roomID)
+        startGame(rooms[roomID])
         io.to(roomID).emit('game-data', rooms[roomID])
     })
 

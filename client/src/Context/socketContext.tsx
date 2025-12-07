@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import type { Game, Room, User } from '../types'
+import { useNavigate } from 'react-router-dom'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
@@ -11,6 +12,7 @@ interface SocketContextInterface {
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
     leaveRoom(): void
+    triggerStart(): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -19,6 +21,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [rooms, setRooms] = useState<Room[]>([])
     const [game, setGame] = useState<Game | null>(null)
     const [isRegistered, setIsRegistered] = useState(false)
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         socket.on('connect', () => {
@@ -38,6 +42,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
         socket.on('game-data', (data: Game) => {
             setGame(data)
+        })
+
+        socket.on('start-game', (roomID: string) => {
+            navigate(`/game/${roomID}`)
         })
 
         return () => {
@@ -70,11 +78,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('join-room', roomID)
     }
 
+    const triggerStart = () => {
+        socket.emit('start-triggered')
+    }
+
     const leaveRoom = () => {
         socket.emit('leave-room')
     }
 
-    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom }}>{children}</SocketContext.Provider>
+    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

@@ -3,6 +3,7 @@ import { useUser } from '../Context/userContext'
 import { useSockets } from '../Context/socketContext'
 import { useNavigate } from 'react-router-dom'
 import '../styles/home.css'
+import Img from './Components/Img'
 
 const Home = () => {
     const [roomId, setRoomId] = useState('')
@@ -33,7 +34,7 @@ const Home = () => {
         <div className="lobby-container">
             <div className="lobby-content">
                 <div className="user-profile-header">
-                    <img src={user.picture} alt={user.username} className="user-avatar" />
+                    <Img src={user.picture} alt={user.username} className="user-avatar" />
                     <div>
                         <h2 className="user-name">{user.username}</h2>
                         <p className="user-id">ID: {user.id}</p>

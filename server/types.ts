@@ -14,7 +14,7 @@ export type Room = {
     players: Player[],
     deck: string[],
     turn: number | null,
-    trump: number | null,
+    trump: string | null,
     multiplier: number
 }
 

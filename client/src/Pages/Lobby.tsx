@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import '../styles/game.css'
+import '../styles/lobby.css'
 import { useSockets } from '../Context/socketContext'
 import { useUser } from '../Context/userContext'
 import { useNavigate, useParams } from 'react-router-dom'
 
-const Game = () => {
-    const { game, leaveRoom, joinRoom } = useSockets()
+const Lobby = () => {
+    const { game, leaveRoom, joinRoom, triggerStart } = useSockets()
     const { user } = useUser()
     const [copied, setCopied] = useState(false)
 
@@ -41,7 +41,7 @@ const Game = () => {
     }
 
     const handleStartGame = () => {
-        console.log('Starting game with players:', game.players)
+        triggerStart()
     }
 
     const handleLeaveRoom = () => {
@@ -118,4 +118,4 @@ const Game = () => {
     )
 }
 
-export default Game
+export default Lobby

@@ -13,7 +13,10 @@ export const logOutputs = (command: string, io: SocketIOServer, rooms: Record<st
         case 'clients':
             const sockets = Array.from(io.sockets.sockets.values())
             console.log(`Connected clients (${sockets.length}):`)
-            sockets.forEach((s) => console.log(`  - ${s.id.slice(0, 6)}`))
+            sockets.forEach((s) => {
+                console.log(`  - ${s.id.slice(0, 6)}`)
+                console.log(s.data)
+            })
             break
 
         case 'rooms':

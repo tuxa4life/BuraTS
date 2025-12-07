@@ -74,4 +74,15 @@ const getRooms = (rooms: Record<string, Room>) => {
     return output
 }
 
-export { getRooms, playerJoin, leaveRoom, disconnectPlayer }
+const startGame = (room: Room) => {
+    if (!room) return
+
+    // TODO: set player hands and other attributes
+
+    room.deck = ['SET THIS']
+    room.turn = 0
+    room.trump = 'SET THIS'
+    room.multiplier = 1
+}
+
+export { getRooms, playerJoin, leaveRoom, disconnectPlayer, startGame }

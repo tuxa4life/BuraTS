@@ -4,7 +4,8 @@ import { useEffect } from 'react'
 import { useUser } from './Context/userContext'
 import Home from './Pages/Home'
 import './styles/vars.css'
-import Game from './Pages/Lobby'
+import Lobby from './Pages/Lobby'
+import Game from './Pages/Game'
 
 const App = () => {
     const { isLoggedIn } = useUser()
@@ -18,7 +19,8 @@ const App = () => {
         <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/login' element={<Login />} />
-            <Route path='/lobby/:roomID' element={<Game />} />
+            <Route path='/lobby/:roomID' element={<Lobby />} />
+            <Route path='/game/:roomID' element={<Game />} />
         </Routes>
     </div>
 }
