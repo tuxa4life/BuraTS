@@ -3,6 +3,7 @@ import '../styles/lobby.css'
 import { useSockets } from '../Context/socketContext'
 import { useUser } from '../Context/userContext'
 import { useNavigate, useParams } from 'react-router-dom'
+import Img from './Components/Img'
 
 const Lobby = () => {
     const { game, leaveRoom, joinRoom, triggerStart } = useSockets()
@@ -75,7 +76,7 @@ const Lobby = () => {
                 <div className="section">
                     <div className="section-label">Room Creator</div>
                     <div className="creator-card">
-                        <img src={game.players[0].picture} alt={game.players[0].username} className="creator-avatar" />
+                        <Img src={game.players[0].picture} alt={game.players[0].username} className="creator-avatar" />
                         <div className="creator-info">
                             <div className="creator-username">{game.players[0].username}</div>
                             <div className="creator-badge">Host</div>
@@ -91,7 +92,7 @@ const Lobby = () => {
                     <div className="players-list">
                         {game.players.slice(1).map((player) => (
                             <div key={player.id} className="player-card">
-                                <img src={player.picture} alt={player.username} className="player-avatar" />
+                                <Img src={player.picture} alt={player.username} className="player-avatar" />
                                 <div className="player-username">{player.username}</div>
                             </div>
                         ))}

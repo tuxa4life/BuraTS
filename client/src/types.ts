@@ -12,9 +12,9 @@ export type Room = {
 export type Game = {
     id: string,
     players: Player[],
-    deck: string[],
+    deck: Card[],
     turn: number | null,
-    trump: number | null,
+    trump: Card | null,
     multiplier: number
 }
 
@@ -22,13 +22,13 @@ export type Player = {
     id: string,
     picture: string,
     username: string,
-    hand: string[],
-    played: string[],
-    taken: string[],
+    hand: Card[],
+    played: Card[],
+    taken: Card[],
     points: number
 }
 
-export type Suite = 'spades' | 'heart' | 'clubs' | 'diamonds'
+export type Suite = 'spades' | 'hearts' | 'clubs' | 'diamonds'
 export type Card = {
     suite: Suite,
     value: string,

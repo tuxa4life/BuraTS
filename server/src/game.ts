@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io'
 import { type Room, type Player } from '../types.js'
+import { generateKeys, shuffleDeck } from './cards.js'
 
 const createRoom = (id: string): Room => {
     const room = {
@@ -7,7 +8,7 @@ const createRoom = (id: string): Room => {
         players: [],
         deck: [],
         turn: null,
-        trump: null,
+        trump: undefined,
         multiplier: 1,
     }
 
@@ -44,7 +45,7 @@ const leaveRoom = (socket: Socket, rooms: Record<string, Room>) => {
     const roomID = socket.data.roomID
     const room = rooms[roomID]
 
-    if (room && room.players.find(p => p.id === id)) {
+    if (room && room.players.find((p) => p.id === id)) {
         room.players = room.players.filter((player: Player) => player.id !== id)
         socket.leave(roomID)
         if (room.players.length === 0) delete rooms[roomID]
@@ -77,12 +78,37 @@ const getRooms = (rooms: Record<string, Room>) => {
 const startGame = (room: Room) => {
     if (!room) return
 
-    // TODO: set player hands and other attributes
-
-    room.deck = ['SET THIS']
+    const deck = shuffleDeck(generateKeys())
+    room.deck = deck
     room.turn = 0
-    room.trump = 'SET THIS'
+    room.trump = deck[deck.length - 1]
     room.multiplier = 1
+
+    room.players.forEach((player) => {
+        player.hand = []
+        player.played = []
+        player.taken = []
+        player.points = 0
+    })
+
+    startRound(room, 0)
+}
+
+const startRound = (room: Room, winnerIndex: number) => {
+    dealHand(room, winnerIndex)
+    room.turn = winnerIndex
+    // TODO: calculation of points + reset taken n stuff
+}
+
+const dealHand = (room: Room, winnerIndex: number) => {
+    const players = room.players
+
+    if (players.length === 0) return
+    let i = winnerIndex
+    while (room.deck.length > 0 && room.players.some((p) => p.hand.length < 5)) {
+        room.players[i]!.hand.push(room.deck.splice(0, 1)[0]!)
+        i = (i + 1) % 4
+    }
 }
 
 export { getRooms, playerJoin, leaveRoom, disconnectPlayer, startGame }

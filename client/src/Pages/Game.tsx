@@ -3,15 +3,16 @@ import { useSockets } from '../Context/socketContext'
 import '../styles/game.css'
 import PlayerCard from './Components/PlayerCard'
 import { useUser } from '../Context/userContext'
+import CardSelection from './Components/CardSelection'
+import Deck from './Components/Deck'
 
 const Game = () => {
     const { game } = useSockets()
     const { user } = useUser()
     const navigate = useNavigate()
 
-    if (!game) {
+    if (!game || !game.trump) {
         return <div>Game not found. <u onClick={() => navigate('/')}>Click here to go back</u></div>
-        
     }
 
     const myIndex = game.players.findIndex((p) => p.id === user?.id)
@@ -27,8 +28,13 @@ const Game = () => {
     
 
     return <div className="game-container">
-        {myTurn && <h1>YOUR TURN</h1>}
         {playerCards}
+
+        <button className={`play-button ${myTurn ? 'visible' : ''}`}>PLAY</button>
+        <button className='multiplier-button'>{game.multiplier}x</button>
+        <CardSelection hand={game.players[myIndex].hand} trump={game.trump} />
+    
+        <Deck deck={game.deck} trump={game.trump} />
     </div>
 }
 
