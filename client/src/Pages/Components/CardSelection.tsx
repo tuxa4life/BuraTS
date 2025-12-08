@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import type { Card } from '../../types'
 
-const CardSelection = ({ hand, trump }: { hand: Card[], trump: Card }) => {
-    const [selected, setSelected] = useState<Card[]>([])
-
+const CardSelection = ({ hand, trump, selected, setSelected }: { hand: Card[], trump: Card, selected: Card[], setSelected: React.Dispatch<React.SetStateAction<Card[]>> }) => {
     const sortHand = (): Card[] => {
         const suitePriority = {
             clubs: ['clubs', 'hearts', 'spades', 'diamonds'],

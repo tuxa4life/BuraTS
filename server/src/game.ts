@@ -1,5 +1,5 @@
 import type { Socket } from 'socket.io'
-import { type Room, type Player } from '../types.js'
+import { type Room, type Player, type Card } from '../types.js'
 import { generateKeys, shuffleDeck } from './cards.js'
 
 const createRoom = (id: string): Room => {
@@ -94,6 +94,14 @@ const startGame = (room: Room) => {
     startRound(room, 0)
 }
 
+const handlePlayedHand = (hand: Card[], room: Room) => {
+    const player = room?.players[room.turn!]
+
+    player!.played = hand
+    player!.hand = player!.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
+    room!.turn = (room?.turn! + 1) % 4
+}
+
 const startRound = (room: Room, winnerIndex: number) => {
     dealHand(room, winnerIndex)
     room.turn = winnerIndex
@@ -111,4 +119,4 @@ const dealHand = (room: Room, winnerIndex: number) => {
     }
 }
 
-export { getRooms, playerJoin, leaveRoom, disconnectPlayer, startGame }
+export { getRooms, playerJoin, leaveRoom, disconnectPlayer, startGame, handlePlayedHand }

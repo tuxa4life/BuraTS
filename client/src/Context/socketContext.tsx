@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
-import type { Game, Room, User } from '../types'
+import type { Card, Game, Room, User } from '../types'
 import { useNavigate } from 'react-router-dom'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
@@ -13,6 +13,7 @@ interface SocketContextInterface {
     joinRoom(roomID: string): void
     leaveRoom(): void
     triggerStart(): void
+    playHand(hand: Card[]): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -86,7 +87,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('leave-room')
     }
 
-    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart }}>{children}</SocketContext.Provider>
+    const playHand = (hand: Card[]) => {
+        socket.emit('hand-played', hand)
+    }
+
+    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

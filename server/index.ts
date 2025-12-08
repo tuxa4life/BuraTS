@@ -3,8 +3,8 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { disconnectPlayer, getRooms, leaveRoom, playerJoin, startGame } from './src/game.js'
-import type { Player, Room } from './types.js'
+import { disconnectPlayer, getRooms, handlePlayedHand, leaveRoom, playerJoin, startGame } from './src/game.js'
+import type { Card, Player, Room } from './types.js'
 
 const app = express()
 app.use(cors())
@@ -37,7 +37,6 @@ io.on('connection', (socket: Socket) => {
         if (rooms[roomID]?.players.length === 4) return
         if (!socket.data.id) {
             console.log(`Warning: join-room called without user registration for ${socket.id.slice(0, 6)}`)
-            socket.emit('error', { message: 'User not registered' })
             return
         }
 
@@ -86,6 +85,11 @@ io.on('connection', (socket: Socket) => {
                 io.to(roomID).emit('game-data', rooms[roomID])
             }
         })
+    })
+
+    socket.on('hand-played', (hand: Card[]) => {
+        handlePlayedHand(hand, rooms[socket.data.roomID]!)
+        io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
     })
 })
 

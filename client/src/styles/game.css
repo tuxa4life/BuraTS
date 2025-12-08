@@ -202,3 +202,83 @@
     clip-path: circle(9% at 50% 50%);
     transform: scale(3);
 }
+
+.scoreboard {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: var(--bg-white-transparent);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 12px var(--shadow-dark);
+    z-index: 100;
+}
+
+.scoreboard h3 {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    letter-spacing: 0.5px;
+}
+
+.team-score {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.team-score:last-child {
+    margin-bottom: 0;
+}
+
+.team-name {
+    font-weight: 500;
+}
+
+.team-points {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-left: 10vw;
+}
+
+.played-cards {
+    position: absolute;
+    z-index: 2;
+}
+
+.played-cards img {
+    height: 15vh;
+    margin: 0 2px;
+}
+
+.played-cards.bottom {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, 80%);
+}
+
+.played-cards.top {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -180%);
+}
+
+.played-cards.left {
+    left: 50%;
+    top: 50%;
+    transform: translate(-120%, -50%);
+}
+
+.played-cards.right {
+    left: 50%;
+    top: 50%;
+    transform: translate(20%, -50%);
+}

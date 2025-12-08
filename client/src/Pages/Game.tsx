@@ -5,9 +5,15 @@ import PlayerCard from './Components/PlayerCard'
 import { useUser } from '../Context/userContext'
 import CardSelection from './Components/CardSelection'
 import Deck from './Components/Deck'
+import Scoreboard from './Components/Scoreboard'
+import { useState } from 'react'
+import type { Card } from '../types'
+import PlayedCards from './Components/PlayedCards'
 
 const Game = () => {
-    const { game } = useSockets()
+    const [selected, setSelected] = useState<Card[]>([])
+
+    const { game, playHand } = useSockets()
     const { user } = useUser()
     const navigate = useNavigate()
 
@@ -26,15 +32,20 @@ const Game = () => {
         return <PlayerCard key={player.id} username={player.username} picture={player.picture} position={positions[i]} isActive={game.turn === (myIndex + i) % 4} />
     })
     
+    const playedHands = rotated.map((player, i) => {
+        return <PlayedCards key={`played-${player.id}`} played={player.played} position={positions[i]} />
+    })
 
     return <div className="game-container">
-        {playerCards}
+        { playerCards }
+        { playedHands }
 
-        <button className={`play-button ${myTurn ? 'visible' : ''}`}>PLAY</button>
-        <button className='multiplier-button'>{game.multiplier}x</button>
-        <CardSelection hand={game.players[myIndex].hand} trump={game.trump} />
-    
+        <button onClick={() => playHand(selected)} className={`play-button ${(myTurn && game.players[myIndex].played.length === 0)  ? 'visible' : ''}`}>PLAY</button>
+        { myTurn && <button className='multiplier-button'>{game.multiplier}x</button> }
+
+        <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
         <Deck deck={game.deck} trump={game.trump} />
+        <Scoreboard players={game.players} />
     </div>
 }
 
