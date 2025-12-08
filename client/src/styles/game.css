@@ -12,7 +12,6 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-light);
     border-radius: 12px;
@@ -80,14 +79,17 @@
     bottom: 2vh;
     left: 50%;
     transform: translateX(-50%);
-    width: 60%;
+    width: 90%;
+    max-width: 800px;
     display: flex;
     justify-content: center;
     height: 20vh;
+    min-height: 120px;
 }
 
 .card-selection img {
     height: 100%;
+    max-height: 180px;
     cursor: pointer;
     margin: 0 3px;
     transition: 0.2s all;
@@ -158,6 +160,8 @@
     left: 20vh;
     width: 15vh;
     height: 15vh;
+    min-width: 100px;
+    min-height: 100px;
 }
 
 .deck-container img {
@@ -256,6 +260,8 @@
 
 .played-cards img {
     height: 15vh;
+    max-height: 140px;
+    min-height: 80px;
     margin: 0 2px;
 }
 
@@ -281,4 +287,342 @@
     left: 50%;
     top: 50%;
     transform: translate(20%, -50%);
+}
+
+/* Tablet and below (landscape and portrait) */
+@media screen and (max-width: 1024px) {
+    .player-bubble {
+        padding: 10px 12px;
+        gap: 6px;
+    }
+
+    .player-bubble-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .player-bubble-username {
+        font-size: 12px;
+    }
+
+    .card-selection {
+        width: 95%;
+        height: 18vh;
+        min-height: 100px;
+    }
+
+    .card-selection img {
+        margin: 0 2px;
+    }
+
+    .play-button {
+        bottom: 28vh;
+        padding: 12px 36px;
+        font-size: 16px;
+    }
+
+    .multiplier-button {
+        bottom: 8vh;
+        right: 10vw;
+        padding: 10px 24px;
+        font-size: 16px;
+        transform: scale(1.2);
+    }
+
+    .multiplier-button:hover {
+        transform: scale(1.25);
+    }
+
+    .deck-container {
+        bottom: 8vh;
+        left: 10vw;
+        width: 12vh;
+        height: 12vh;
+        min-width: 80px;
+        min-height: 80px;
+    }
+
+    .deck-count {
+        min-width: 50px;
+        min-height: 50px;
+        font-size: 20px;
+    }
+
+    .scoreboard {
+        top: 15px;
+        left: 15px;
+        padding: 12px;
+    }
+
+    .team-points {
+        margin-left: 5vw;
+    }
+
+    .played-cards img {
+        height: 12vh;
+        max-height: 120px;
+        min-height: 70px;
+    }
+
+    .played-cards.left {
+        transform: translate(-105%, -50%);
+    }
+    .played-cards.right {
+        transform: translate(5%, -50%);
+    }
+}
+
+/* Mobile devices */
+@media screen and (max-width: 768px) {
+    .player-bubble {
+        padding: 8px 10px;
+        gap: 4px;
+        border-radius: 8px;
+    }
+
+    .player-bubble.top {
+        top: 10px;
+    }
+
+    .player-bubble.left {
+        left: 10px;
+    }
+
+    .player-bubble.right {
+        right: 10px;
+    }
+
+    .player-bubble-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border: 2px solid transparent;
+    }
+
+    .player-bubble.active {
+        border: 3px #ef4444 solid;
+    }
+
+    .player-bubble-username {
+        font-size: 11px;
+    }
+
+    .card-selection {
+        bottom: 1vh;
+        width: 98%;
+        height: 16vh;
+        min-height: 90px;
+    }
+
+    .card-selection img {
+        margin: 0 1px;
+    }
+
+    .card-selection img.selected {
+        transform: translateY(-4vh);
+    }
+
+    .play-button {
+        bottom: 24vh;
+        padding: 10px 30px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    .multiplier-button {
+        bottom: 6vh;
+        right: 5vw;
+        padding: 8px 20px;
+        font-size: 14px;
+        border-radius: 8px;
+        transform: scale(1.1);
+    }
+
+    .multiplier-button:hover {
+        transform: scale(1.15);
+    }
+
+    .deck-container {
+        bottom: 6vh;
+        left: 5vw;
+        width: 10vh;
+        height: 10vh;
+        min-width: 70px;
+        min-height: 70px;
+    }
+
+    .deck-count {
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 18px;
+    }
+
+    .scoreboard {
+        top: 10px;
+        left: 10px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .scoreboard h3 {
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    .team-score {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .team-points {
+        margin-left: 3vw;
+    }
+
+    .played-cards img {
+        height: 10vh;
+        max-height: 100px;
+        min-height: 60px;
+        margin: 0 1px;
+    }
+
+    .played-cards.top {
+        transform: translate(-50%, -300%);
+    }
+    .played-cards.left {
+        transform: translate(-75%, -175%);
+    }
+    .played-cards.right {
+        transform: translate(-15%, -50%);
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+    .player-bubble {
+        padding: 6px 8px;
+    }
+
+    .player-bubble-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+
+    .player-bubble-username {
+        font-size: 10px;
+    }
+
+    .card-selection {
+        height: 14vh;
+        min-height: 80px;
+    }
+
+    .play-button {
+        bottom: 22vh;
+        padding: 8px 24px;
+        font-size: 13px;
+    }
+
+    .multiplier-button {
+        bottom: 5vh;
+        right: 3vw;
+        padding: 6px 16px;
+        font-size: 13px;
+        transform: scale(1);
+    }
+
+    .multiplier-button:hover {
+        transform: scale(1.05);
+    }
+
+    .deck-container {
+        bottom: 5vh;
+        left: 3vw;
+        width: 9vh;
+        height: 9vh;
+        min-width: 60px;
+        min-height: 60px;
+    }
+
+    .deck-count {
+        min-width: 35px;
+        min-height: 35px;
+        font-size: 16px;
+    }
+
+    .scoreboard {
+        padding: 8px;
+    }
+
+    .scoreboard h3 {
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+
+    .team-score {
+        font-size: 11px;
+    }
+
+    .played-cards img {
+        height: 5vh;
+        max-height: 90px;
+        min-height: 50px;
+    }
+
+    .played-cards.top {
+        transform: translate(-50%, -300%);
+    }
+    .played-cards.left {
+        transform: translate(-60%, -175%);
+    }
+    .played-cards.right {
+        transform: translate(-30%, -50%);
+    }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .card-selection {
+        bottom: 1vh;
+        height: 25vh;
+        min-height: 70px;
+    }
+
+    .play-button {
+        bottom: 35vh;
+    }
+
+    .multiplier-button {
+        bottom: 12vh;
+    }
+
+    .deck-container {
+        bottom: 12vh;
+    }
+
+    .played-cards img {
+        height: 18vh;
+    }
+}
+
+/* Very small screens */
+@media screen and (max-width: 360px) {
+    .player-bubble-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .scoreboard h3 {
+        font-size: 10px;
+    }
+
+    .team-score {
+        font-size: 10px;
+    }
+
+    .team-points {
+        margin-left: 2vw;
+    }
 }
