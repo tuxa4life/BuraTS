@@ -88,6 +88,14 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const playHand = (hand: Card[]) => {
+        const sameSuite = hand.every(e => e.suite === hand[0].suite)
+        const firstToPlay = game?.players.every(player => player.played.length === 0)
+
+        if (!sameSuite && firstToPlay) {
+            alert('You must play same suite cards!')
+            return
+        }
+
         socket.emit('hand-played', hand)
     }
 
