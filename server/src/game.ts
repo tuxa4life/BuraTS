@@ -18,7 +18,7 @@ const startGame = (room: Room) => {
         player.points = 0
     })
 
-    startRound(room)
+    dealHand(room)
 }
 
 const handlePlayedHand = (hand: Card[], room: Room) => {
@@ -30,10 +30,8 @@ const handlePlayedHand = (hand: Card[], room: Room) => {
     const allPlayed = room.players.every((player) => player.played.length !== 0)
     if (allPlayed) {
         const winner = determineWinner(room.players, room.trump!, room.lastWinner)
-        console.log('amis wina moigo ' + room.players[winner]?.username)
         room.lastWinner = winner
         room.players[winner]!.taken.push(...gatherPlayedCards(room.players))
-        console.log(room.players[winner]?.username + ' Won!')
 
         room.turn = room.lastWinner
         room.players.forEach((player) => (player.played = []))
@@ -43,9 +41,23 @@ const handlePlayedHand = (hand: Card[], room: Room) => {
 }
 
 const startRound = (room: Room) => {
-    dealHand(room)
+    if (!room) return
+
+    const deck = shuffleDeck(generateKeys())
+    room.deck = deck
     room.turn = room.lastWinner
-    // TODO: calculation of points + reset taken n stuff
+    room.trump = deck[deck.length - 1]
+    room.multiplier = 1
+
+    room.players.forEach((player) => {
+        player.hand = []
+        player.played = []
+        player.taken = []
+    })
+
+    dealHand(room)
+
+    // TODO: calculations
 }
 
 const dealHand = (room: Room) => {
@@ -60,4 +72,4 @@ const dealHand = (room: Room) => {
     }
 }
 
-export { startGame, handlePlayedHand }
+export { startGame, handlePlayedHand, startRound }

@@ -3,7 +3,7 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { handlePlayedHand, startGame } from './src/game.js'
+import { handlePlayedHand, startGame, startRound } from './src/game.js'
 import type { Card, Room } from './types.js'
 import { disconnectPlayer, getRooms, leaveRoom, playerJoin } from './src/rooms.js'
 
@@ -91,6 +91,17 @@ io.on('connection', (socket: Socket) => {
     socket.on('hand-played', (hand: Card[]) => {
         handlePlayedHand(hand, rooms[socket.data.roomID]!)
         io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
+
+        // Start new round after 3 sec
+        const room = rooms[socket.data.roomID]!
+        const roundOver = room.deck.length === 0
+        const emptyHands = room.players.every(player => player.hand.length === 0)
+        if (roundOver && emptyHands) {
+            setTimeout(() => {
+                startRound(room)
+            io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
+            }, 3000)
+        }
     })
 })
 

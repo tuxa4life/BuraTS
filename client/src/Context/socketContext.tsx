@@ -6,14 +6,14 @@ import { useNavigate } from 'react-router-dom'
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
 interface SocketContextInterface {
-    rooms: Room[],
+    rooms: Room[]
     game: Game | null
     getRooms(): void
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
     leaveRoom(): void
     triggerStart(): void
-    playHand(hand: Card[]): void
+    playHand(hand: Card[], myIndex: number): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -57,7 +57,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }, [])
 
     const getRooms = () => socket.emit('get-room-list')
-    
+
     const registerOnSockets = (user: User) => {
         socket.emit('user-registered', user)
         setIsRegistered(true)
@@ -65,7 +65,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     const joinRoom = (roomID: string) => {
         const user = localStorage.getItem('user')
-        if(!user) {
+        if (!user) {
             alert('MUST BE REGISTERED')
             return
         }
@@ -87,13 +87,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('leave-room')
     }
 
-    const playHand = (hand: Card[]) => {
+    const playHand = (hand: Card[], myIndex: number) => {
         if (hand.length === 0) return
 
-        const sameSuite = hand.every(e => e.suite === hand[0].suite)
-        const firstToPlay = game?.players.every(player => player.played.length === 0)
+        const sameSuite = hand.every((e) => e.suite === hand[0].suite)
+        const firstToPlay = game!.players.every((p) => p.played.length === 0)
+        
+        const prevIndex = (((myIndex - 1) % 4) + 4) % 4
+        const prevPlayedCount = game!.players[prevIndex].played.length
+        
+        if (!firstToPlay && hand.length !== prevPlayedCount) {
+            alert('You must play same number of cards!')
+            return
+        }
 
-        if (!sameSuite && firstToPlay) {
+        if (firstToPlay && !sameSuite) {
             alert('You must play same suite cards!')
             return
         }
