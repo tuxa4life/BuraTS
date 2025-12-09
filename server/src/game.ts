@@ -1,5 +1,5 @@
 import { type Room, type Card } from '../types.js'
-import { determineWinner, gatherPlayedCards, generateKeys, shuffleDeck } from './cards.js'
+import { determineWinner, gatherPlayedCards, generateKeys, getCardPoints, shuffleDeck } from './cards.js'
 
 const startGame = (room: Room) => {
     if (!room) return
@@ -56,8 +56,27 @@ const startRound = (room: Room) => {
     })
 
     dealHand(room)
+}
 
-    // TODO: calculations
+const handleRoundOver = (room: Room) => {
+    let teamA = 0
+    let teamB = 0
+
+    room.players.forEach((p, i) => {
+        const total = p?.taken.flat(1).reduce((acc, c) => acc + getCardPoints(c.value), 0)
+        if (i % 2 === 0) teamA += total
+        else teamB += total
+    })
+
+    if (teamA > teamB) {
+        room.players[0]!.points += room.multiplier
+        room.players[2]!.points += room.multiplier
+    } else if (teamA < teamB) {
+        room.players[1]!.points += room.multiplier
+        room.players[3]!.points += room.multiplier
+    } else {
+        // draw
+    }
 }
 
 const dealHand = (room: Room) => {
@@ -72,4 +91,4 @@ const dealHand = (room: Room) => {
     }
 }
 
-export { startGame, handlePlayedHand, startRound }
+export { startGame, handlePlayedHand, startRound, handleRoundOver }

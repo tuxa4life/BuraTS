@@ -1,5 +1,15 @@
 import { type Card, type Player, Suite } from '../types.js'
 
+const cardPowers: Record<string, number> = { '6': 6, '7': 7, '8': 8, '9': 9, J: 10, Q: 11, K: 12, '10': 13, A: 14 }
+const getCardPoints = (val: string): number => {
+    if (val === 'A') return 11
+    if (val === '10') return 10
+    if (val === 'K') return 4
+    if (val === 'Q') return 3
+    if (val === 'J') return 2
+    return 0
+}
+
 const generateKeys = (): Card[] => {
     const suites = [Suite.spades, Suite.hearts, Suite.clubs, Suite.diamonds]
     const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -32,7 +42,6 @@ const shuffleDeck = (cards: Card[]): Card[] => {
     return shuffled
 }
 
-const cardPowers: { [k: string]: number } = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, J: 10, Q: 11, K: 12, '10': 13, A: 14 }
 const sortHand = (cards: Card[], trump: Card): Card[] => {
     const suitePriority = {
         clubs: ['clubs', 'hearts', 'spades', 'diamonds'],
@@ -50,7 +59,8 @@ const sortHand = (cards: Card[], trump: Card): Card[] => {
     })
 }
 
-const A_Beats_B = (a: Card, b: Card, trump: Card): boolean => { // B is leading suite here
+const A_Beats_B = (a: Card, b: Card, trump: Card): boolean => {
+    // B is leading suite here
     const aVal = cardPowers[a.value]!
     const bVal = cardPowers[b.value]!
 
@@ -69,7 +79,7 @@ const A_Beats_B = (a: Card, b: Card, trump: Card): boolean => { // B is leading 
 }
 
 const determineWinner = (players: Player[], trump: Card, leadingIndex: number) => {
-    const hands = players.map(player => sortHand(player.played, trump))
+    const hands = players.map((player) => sortHand(player.played, trump))
     let winnerIndex = leadingIndex
     hands.forEach((hand, handIndex) => {
         const winnerHand = hands[winnerIndex]
@@ -84,7 +94,6 @@ const determineWinner = (players: Player[], trump: Card, leadingIndex: number) =
     return winnerIndex
 }
 
-
 const gatherPlayedCards = (players: Player[]): Card[][] => {
     const output: Card[][] = []
     players.forEach((player) => output.push(player.played))
@@ -92,4 +101,4 @@ const gatherPlayedCards = (players: Player[]): Card[][] => {
     return output
 }
 
-export { generateKeys, shuffleDeck, gatherPlayedCards, determineWinner }
+export { generateKeys, shuffleDeck, gatherPlayedCards, determineWinner, getCardPoints }
