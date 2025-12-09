@@ -88,6 +88,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const playHand = (hand: Card[]) => {
+        if (hand.length === 0) return
+
         const sameSuite = hand.every(e => e.suite === hand[0].suite)
         const firstToPlay = game?.players.every(player => player.played.length === 0)
 

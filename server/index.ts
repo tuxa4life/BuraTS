@@ -3,8 +3,9 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { disconnectPlayer, getRooms, handlePlayedHand, leaveRoom, playerJoin, startGame } from './src/game.js'
-import type { Card, Player, Room } from './types.js'
+import { handlePlayedHand, startGame } from './src/game.js'
+import type { Card, Room } from './types.js'
+import { disconnectPlayer, getRooms, leaveRoom, playerJoin } from './src/rooms.js'
 
 const app = express()
 app.use(cors())

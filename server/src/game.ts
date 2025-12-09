@@ -1,79 +1,5 @@
-import type { Socket } from 'socket.io'
-import { type Room, type Player, type Card } from '../types.js'
-import { generateKeys, shuffleDeck } from './cards.js'
-
-const createRoom = (id: string): Room => {
-    const room = {
-        id,
-        players: [],
-        deck: [],
-        turn: null,
-        trump: undefined,
-        multiplier: 1,
-    }
-
-    return room
-}
-
-const createPlayer = (id: string, username: string, picture: string): Player => {
-    const player = {
-        id,
-        username,
-        picture,
-        hand: [],
-        played: [],
-        taken: [],
-        points: 0,
-    }
-
-    return player
-}
-
-const playerJoin = (socket: Socket, roomID: string, rooms: Record<string, Room>): void => {
-    if (!rooms[roomID]) rooms[roomID] = createRoom(roomID)
-
-    const exists = rooms[roomID].players.some((player: Player) => socket.data.id && player.id === socket.id)
-    if (exists) return
-
-    rooms[roomID].players.push(createPlayer(socket.data.id, socket.data.username, socket.data.picture))
-    socket.join(roomID)
-    socket.data.roomID = roomID
-}
-
-const leaveRoom = (socket: Socket, rooms: Record<string, Room>) => {
-    const id = socket.data.id
-    const roomID = socket.data.roomID
-    const room = rooms[roomID]
-
-    if (room && room.players.find((p) => p.id === id)) {
-        room.players = room.players.filter((player: Player) => player.id !== id)
-        socket.leave(roomID)
-        if (room.players.length === 0) delete rooms[roomID]
-    }
-}
-
-const disconnectPlayer = (socket: Socket, rooms: Record<string, Room>) => {
-    Object.keys(rooms).forEach((roomID) => {
-        const room = rooms[roomID]
-        if (!room) return
-
-        const wasInRoom = room.players.some((p) => p.id === socket.data.id)
-        room.players = room.players.filter((p) => p.id !== socket.data.id)
-        if (wasInRoom) socket.leave(roomID)
-        if (room.players.length === 0) delete rooms[roomID]
-    })
-}
-
-const getRooms = (rooms: Record<string, Room>) => {
-    const output = Object.keys(rooms).map((key) => {
-        return {
-            id: key,
-            playerCount: rooms[key]?.players.length,
-        }
-    })
-
-    return output
-}
+import { type Room, type Card } from '../types.js'
+import { determineWinner, gatherPlayedCards, generateKeys, shuffleDeck } from './cards.js'
 
 const startGame = (room: Room) => {
     if (!room) return
@@ -83,6 +9,7 @@ const startGame = (room: Room) => {
     room.turn = 0
     room.trump = deck[deck.length - 1]
     room.multiplier = 1
+    room.lastWinner = 0
 
     room.players.forEach((player) => {
         player.hand = []
@@ -91,25 +18,39 @@ const startGame = (room: Room) => {
         player.points = 0
     })
 
-    startRound(room, 0)
+    startRound(room)
 }
 
 const handlePlayedHand = (hand: Card[], room: Room) => {
     const player = room?.players[room.turn!]
-
     player!.played = hand
     player!.hand = player!.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
     room!.turn = (room?.turn! + 1) % 4
+
+    const allPlayed = room.players.every((player) => player.played.length !== 0)
+    if (allPlayed) {
+        const winner = determineWinner(room.players, room.trump!, room.lastWinner)
+        room.lastWinner = winner
+        room.players[winner]!.taken.push(...gatherPlayedCards(room.players))
+        console.log('amis wina moigo ' + room.players[winner])
+        console.log(room.players[winner]?.username + ' Won!')
+
+        room.turn = room.lastWinner
+        room.players.forEach((player) => (player.played = []))
+
+        dealHand(room)
+    }
 }
 
-const startRound = (room: Room, winnerIndex: number) => {
-    dealHand(room, winnerIndex)
-    room.turn = winnerIndex
+const startRound = (room: Room) => {
+    dealHand(room)
+    room.turn = room.lastWinner
     // TODO: calculation of points + reset taken n stuff
 }
 
-const dealHand = (room: Room, winnerIndex: number) => {
+const dealHand = (room: Room) => {
     const players = room.players
+    const winnerIndex = room.lastWinner
 
     if (players.length === 0) return
     let i = winnerIndex
@@ -119,4 +60,4 @@ const dealHand = (room: Room, winnerIndex: number) => {
     }
 }
 
-export { getRooms, playerJoin, leaveRoom, disconnectPlayer, startGame, handlePlayedHand }
+export { startGame, handlePlayedHand }

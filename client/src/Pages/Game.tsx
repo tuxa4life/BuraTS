@@ -40,7 +40,7 @@ const Game = () => {
         { playerCards }
         { playedHands }
 
-        <button onClick={() => playHand(selected)} className={`play-button ${(myTurn && game.players[myIndex].played.length === 0)  ? 'visible' : ''}`}>PLAY</button>
+        <button onClick={() => {playHand(selected); setSelected([])}} className={`play-button ${(myTurn && game.players[myIndex].played.length === 0)  ? 'visible' : ''}`}>PLAY</button>
         { myTurn && <button className='multiplier-button'>{game.multiplier}x</button> }
 
         <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />

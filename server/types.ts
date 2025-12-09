@@ -5,7 +5,7 @@ export type Player = {
     username: string,
     hand: Card[],
     played: Card[],
-    taken: Card[],
+    taken: Card[][],
     points: number
 }
 
@@ -15,6 +15,7 @@ export type Room = {
     deck: Card[],
     turn: number | null,
     trump: Card | undefined,
+    lastWinner: number
     multiplier: number
 }
 
