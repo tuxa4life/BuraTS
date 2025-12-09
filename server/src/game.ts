@@ -30,9 +30,9 @@ const handlePlayedHand = (hand: Card[], room: Room) => {
     const allPlayed = room.players.every((player) => player.played.length !== 0)
     if (allPlayed) {
         const winner = determineWinner(room.players, room.trump!, room.lastWinner)
+        console.log('amis wina moigo ' + room.players[winner]?.username)
         room.lastWinner = winner
         room.players[winner]!.taken.push(...gatherPlayedCards(room.players))
-        console.log('amis wina moigo ' + room.players[winner])
         console.log(room.players[winner]?.username + ' Won!')
 
         room.turn = room.lastWinner

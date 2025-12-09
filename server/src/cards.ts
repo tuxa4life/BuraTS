@@ -32,6 +32,7 @@ const shuffleDeck = (cards: Card[]): Card[] => {
     return shuffled
 }
 
+const cardPowers: { [k: string]: number } = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, J: 10, Q: 11, K: 12, '10': 13, A: 14 }
 const sortHand = (cards: Card[], trump: Card): Card[] => {
     const suitePriority = {
         clubs: ['clubs', 'hearts', 'spades', 'diamonds'],
@@ -40,9 +41,7 @@ const sortHand = (cards: Card[], trump: Card): Card[] => {
         diamonds: ['diamonds', 'spades', 'hearts', 'clubs'],
     }
 
-    const cardPowers: { [k: string]: number } = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, J: 10, Q: 11, K: 12, '10': 13, A: 14 }
     const order = suitePriority[trump.suite]
-
     return cards.sort((a, b) => {
         const suiteDiff = order.indexOf(a.suite) - order.indexOf(b.suite)
         if (suiteDiff !== 0) return suiteDiff
@@ -51,65 +50,36 @@ const sortHand = (cards: Card[], trump: Card): Card[] => {
     })
 }
 
-const beatsHand = (challengerHand: Card[], currentWinnerHand: Card[], trumpCard: Card, leadingSuit: Suite): boolean => {
-    const cardPowerMap: { [k: string]: number } = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, J: 10, Q: 11, K: 12, '10': 13, A: 14 }
-    for (let index = 0; index < challengerHand.length; index ++) {
-        const challengerCard = challengerHand[index]
-        const winnerCard = currentWinnerHand[index]
-        const challengerValue = cardPowerMap[challengerCard!.value]
-        const winnerValue = cardPowerMap[winnerCard!.value]
+const A_Beats_B = (a: Card, b: Card, trump: Card): boolean => { // B is leading suite here
+    const aVal = cardPowers[a.value]!
+    const bVal = cardPowers[b.value]!
 
-        const challengerIsTrump = challengerCard!.suite === trumpCard.suite
-        const winnerIsTrump = winnerCard!.suite === trumpCard.suite
-
-        if (challengerIsTrump && !winnerIsTrump) return true
-        if (!challengerIsTrump && winnerIsTrump) return false
-        
-
-        if (challengerIsTrump && winnerIsTrump) {
-            if (challengerValue! > winnerValue!) return true
-            if (challengerValue! < winnerValue!) return false
-
-            continue
-        }
-
-        const challengerIsLeadingSuit = challengerCard!.suite === leadingSuit
-        const winnerIsLeadingSuit = winnerCard!.suite === leadingSuit
-
-        if (challengerIsLeadingSuit && !winnerIsLeadingSuit) return true
-        if (!challengerIsLeadingSuit && winnerIsLeadingSuit) return false
-
-        if (challengerIsLeadingSuit && winnerIsLeadingSuit) {
-            if (challengerValue! > winnerValue!) return true
-            if (challengerValue! < winnerValue!) return false
-
-            continue
-        }
-
-        continue
+    const sameSuites = a.suite === b.suite
+    if (sameSuites) {
+        if (aVal > bVal) return true
+        else return false
     }
+
+    const aTrump = a.suite === trump.suite
+    const bTrump = b.suite === trump.suite
+    if (aTrump) return true
+    if (bTrump) return false
 
     return false
 }
 
-const determineWinner = (players: Player[], trumpCard: Card, leadingIndex: number): number => {
-    const sortedHands = players.map((player) => sortHand(player.played, trumpCard))
+const determineWinner = (players: Player[], trump: Card, leadingIndex: number) => {
+    const hands = players.map(player => sortHand(player.played, trump))
     let winnerIndex = leadingIndex
+    hands.forEach((hand, handIndex) => {
+        const winnerHand = hands[winnerIndex]
+        let isBetter = true
+        hand.forEach((card, i) => {
+            isBetter = isBetter && A_Beats_B(card, winnerHand![i]!, trump)
+        })
 
-    const leadingSuit = sortedHands[leadingIndex]![0]!.suite
-    for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
-        if (playerIndex === winnerIndex) {
-            continue
-        }
-
-        const challengerHand = sortedHands[playerIndex]
-        const currentWinnerHand = sortedHands[winnerIndex]
-
-        const challengerBeatsWinner = beatsHand(challengerHand!, currentWinnerHand!, trumpCard, leadingSuit)
-        if (challengerBeatsWinner) {
-            winnerIndex = playerIndex
-        }
-    }
+        if (isBetter) winnerIndex = handIndex
+    })
 
     return winnerIndex
 }
@@ -122,4 +92,4 @@ const gatherPlayedCards = (players: Player[]): Card[][] => {
     return output
 }
 
-export { generateKeys, shuffleDeck, determineWinner, gatherPlayedCards }
+export { generateKeys, shuffleDeck, gatherPlayedCards, determineWinner }
