@@ -134,24 +134,31 @@
     position: absolute;
     bottom: 10vh;
     right: 15vw;
-    padding: 12px 32px;
-    background: var(--bg-white-transparent);
-    backdrop-filter: blur(10px);
+    transform: scale(0);
+    opacity: 0;
+    transition: all 0.3s ease;
+    padding: 16px 48px;
+    background: transparent;
     border: 2px solid var(--text-primary);
     color: var(--text-primary);
     font-size: 18px;
     font-weight: 700;
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px var(--shadow-dark);
-    transform: scale(1.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.multiplier-button.visible {
+    transform: scale(1);
+    opacity: 1;
 }
 
 .multiplier-button:hover {
     background: var(--text-primary);
     color: var(--primary-end);
-    transform: scale(1.35);
+    box-shadow: 0 8px 24px var(--shadow-primary);
+    transform: scale(1.05);
 }
 
 .deck-container {

@@ -50,10 +50,8 @@ const Game = () => {
             {playerCards}
             {playedHands}
 
-            <button onClick={handlePlayHand} className={`play-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>
-                PLAY
-            </button>
-            {myTurn && <button className="multiplier-button">{game.multiplier}x</button>}
+            <button onClick={handlePlayHand} className={`play-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>PLAY</button>
+            <button onClick={() => console.log('Davi offered')} className={`multiplier-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>{game.multiplier}x</button>
 
             <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
             <Deck deck={game.deck} trump={game.trump} />

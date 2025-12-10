@@ -60,7 +60,6 @@ const sortHand = (cards: Card[], trump: Card): Card[] => {
 }
 
 const A_Beats_B = (a: Card, b: Card, trump: Card): boolean => {
-    // B is leading suite here
     const aVal = cardPowers[a.value]!
     const bVal = cardPowers[b.value]!
 
