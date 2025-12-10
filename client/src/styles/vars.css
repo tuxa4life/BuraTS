@@ -26,3 +26,10 @@
     --spacing-lg: 40px;
     --spacing-xl: 48px;
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Vend Sans", sans-serif;
+}
