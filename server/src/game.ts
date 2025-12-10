@@ -62,6 +62,8 @@ const handleRoundOver = (room: Room) => {
     let teamA = 0
     let teamB = 0
 
+    let text = ''
+
     room.players.forEach((p, i) => {
         const total = p?.taken.flat(1).reduce((acc, c) => acc + getCardPoints(c.value), 0)
         if (i % 2 === 0) teamA += total
@@ -71,12 +73,18 @@ const handleRoundOver = (room: Room) => {
     if (teamA > teamB) {
         room.players[0]!.points += room.multiplier
         room.players[2]!.points += room.multiplier
+
+        text = `${room.players[0]!.username} and ${room.players[2]!.username} won the round!`
     } else if (teamA < teamB) {
         room.players[1]!.points += room.multiplier
         room.players[3]!.points += room.multiplier
+
+        text = `${room.players[1]!.username} and ${room.players[3]!.username} won the round!`
     } else {
-        // draw
+        text = 'The round was a draw!'
     }
+
+    return text
 }
 
 const dealHand = (room: Room) => {

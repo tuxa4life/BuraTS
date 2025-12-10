@@ -8,6 +8,8 @@ const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 interface SocketContextInterface {
     rooms: Room[]
     game: Game | null
+    message: string
+    messageState: boolean
     getRooms(): void
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
@@ -22,6 +24,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [rooms, setRooms] = useState<Room[]>([])
     const [game, setGame] = useState<Game | null>(null)
     const [isRegistered, setIsRegistered] = useState(false)
+
+    const [message, setMessage] = useState<string>('')
+    const [messageState, setMessageState] = useState<boolean>(false)
 
     const navigate = useNavigate()
 
@@ -49,10 +54,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             navigate(`/game/${roomID}`)
         })
 
+        socket.on('message', (message: string) => {
+            setMessage(message)
+            setMessageState(!!message)
+        })
+
         return () => {
             socket.off('connect')
             socket.off('room-list')
             socket.off('game-data')
+            socket.off('start-game')
+            socket.off('message')
         }
     }, [])
 
@@ -109,7 +121,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('hand-played', hand)
     }
 
-    return <SocketContext.Provider value={{ rooms, game, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand }}>{children}</SocketContext.Provider>
+    return <SocketContext.Provider value={{ rooms, game, message, messageState, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

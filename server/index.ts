@@ -97,11 +97,13 @@ io.on('connection', (socket: Socket) => {
         const roundOver = room.deck.length === 0
         const emptyHands = room.players.every(player => player.hand.length === 0)
         if (roundOver && emptyHands) {
-            handleRoundOver(room)
+            const message = handleRoundOver(room)
+            io.to(socket.data.roomID).emit('message', message)
 
             setTimeout(() => {
                 startRound(room)
-            io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
+                io.to(socket.data.roomID).emit('message', '')
+                io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
             }, 3000)
         }
     })

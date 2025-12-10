@@ -296,6 +296,16 @@
     transform: translate(20%, -50%);
 }
 
+.game-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size:  24px;
+    font-weight: 700;
+    color: white;
+}
+
 /* Tablet and below (landscape and portrait) */
 @media screen and (max-width: 1024px) {
     .player-bubble {
@@ -633,3 +643,4 @@
         margin-left: 2vw;
     }
 }
+

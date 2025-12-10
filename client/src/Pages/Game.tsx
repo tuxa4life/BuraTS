@@ -13,7 +13,7 @@ import PlayedCards from './Components/PlayedCards'
 const Game = () => {
     const [selected, setSelected] = useState<Card[]>([])
 
-    const { game, playHand } = useSockets()
+    const { game, message, messageState, playHand } = useSockets()
     const { user } = useUser()
     const navigate = useNavigate()
 
@@ -49,6 +49,8 @@ const Game = () => {
         <div className="game-container">
             {playerCards}
             {playedHands}
+
+            { messageState && <p className='game-message'>{message}</p> }
 
             <button onClick={handlePlayHand} className={`play-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>PLAY</button>
             <button onClick={() => console.log('Davi offered')} className={`multiplier-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>{game.multiplier}x</button>
