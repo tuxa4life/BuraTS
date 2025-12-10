@@ -89,13 +89,20 @@ io.on('connection', (socket: Socket) => {
     })
 
     socket.on('hand-played', (hand: Card[]) => {
-        handlePlayedHand(hand, rooms[socket.data.roomID]!)
-        io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
+        const room = rooms[socket.data.roomID]!
+        const { allPlayed, winnerIndex } = handlePlayedHand(hand, room)
+        io.to(socket.data.roomID).emit('game-data', room)
+        
+        if (allPlayed) {
+            io.to(socket.data.roomID).emit('message', `${room.players[winnerIndex!]?.username} takes!`)
+            setTimeout(() => {
+                io.to(socket.data.roomID).emit('message', '')
+            }, 2000)
+        }
 
         // Start new round after 3 sec
-        const room = rooms[socket.data.roomID]!
         const roundOver = room.deck.length === 0
-        const emptyHands = room.players.every(player => player.hand.length === 0)
+        const emptyHands = room.players.every((player) => player.hand.length === 0)
         if (roundOver && emptyHands) {
             const message = handleRoundOver(room)
             io.to(socket.data.roomID).emit('message', message)
@@ -103,7 +110,7 @@ io.on('connection', (socket: Socket) => {
             setTimeout(() => {
                 startRound(room)
                 io.to(socket.data.roomID).emit('message', '')
-                io.to(socket.data.roomID).emit('game-data', rooms[socket.data.roomID])
+                io.to(socket.data.roomID).emit('game-data', room)
             }, 3000)
         }
     })

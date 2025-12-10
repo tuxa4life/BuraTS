@@ -21,23 +21,26 @@ const startGame = (room: Room) => {
     dealHand(room)
 }
 
-const handlePlayedHand = (hand: Card[], room: Room) => {
+const handlePlayedHand = (hand: Card[], room: Room): { allPlayed: boolean, winnerIndex: number | null } => {
     const player = room?.players[room.turn!]
     player!.played = hand
     player!.hand = player!.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
     room!.turn = (room?.turn! + 1) % 4
 
     const allPlayed = room.players.every((player) => player.played.length !== 0)
+    let winnerIndex = null
     if (allPlayed) {
-        const winner = determineWinner(room.players, room.trump!, room.lastWinner)
-        room.lastWinner = winner
-        room.players[winner]!.taken.push(...gatherPlayedCards(room.players))
+        winnerIndex = determineWinner(room.players, room.trump!, room.lastWinner)
+        room.lastWinner = winnerIndex
+        room.players[winnerIndex]!.taken.push(...gatherPlayedCards(room.players))
 
         room.turn = room.lastWinner
         room.players.forEach((player) => (player.played = []))
 
         dealHand(room)
     }
+
+    return { allPlayed, winnerIndex }
 }
 
 const startRound = (room: Room) => {
@@ -58,7 +61,7 @@ const startRound = (room: Room) => {
     dealHand(room)
 }
 
-const handleRoundOver = (room: Room) => {
+const handleRoundOver = (room: Room): string => {
     let teamA = 0
     let teamB = 0
 
