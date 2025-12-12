@@ -17,6 +17,13 @@ export type Room = {
     trump: Card | undefined,
     lastWinner: number
     multiplier: number
+    davi: {
+        last: number | undefined,
+        acceptState: {
+            playerOne: boolean | undefined,
+            playerTwo: boolean | undefined
+        }
+    }
 }
 
 // Cards
