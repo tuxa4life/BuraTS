@@ -1,7 +1,6 @@
 import type { Socket } from 'socket.io'
 import type { Player, Room } from '../types.js'
 
-
 const createRoom = (id: string): Room => {
     const room = {
         id,
@@ -10,7 +9,14 @@ const createRoom = (id: string): Room => {
         turn: null,
         trump: undefined,
         multiplier: 1,
-        lastWinner: 0
+        lastWinner: 0,
+        davi: {
+            last: undefined,
+            acceptState: {
+                playerOne: undefined,
+                playerTwo: undefined
+            }
+        }
     }
 
     return room
