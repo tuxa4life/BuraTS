@@ -5,11 +5,14 @@
     "license": "MIT",
     "author": "Nikoloz Tukhashvili",
     "type": "module",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
         "dev": "nodemon --exec tsx index.ts",
         "start": "node dist/index.js",
         "build": "tsc"
+    },
+    "engines": {
+        "node": ">=18.0.0"
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -18,6 +21,8 @@
     },
     "devDependencies": {
         "@types/express": "^5.0.6",
+        "@types/cors": "^2.8.17",
+        "@types/node": "^20.11.0",
         "nodemon": "^3.1.11",
         "ts-node": "^10.9.2",
         "tsx": "^4.21.0",
