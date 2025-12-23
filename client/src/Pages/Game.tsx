@@ -13,7 +13,7 @@ import PlayedCards from './Components/PlayedCards'
 const Game = () => {
     const [selected, setSelected] = useState<Card[]>([])
 
-    const { game, message, messageState, playHand } = useSockets()
+    const { game, message, messageState, playHand, offerDavi } = useSockets()
     const { user } = useUser()
     const navigate = useNavigate()
 
@@ -32,6 +32,11 @@ const Game = () => {
     const handlePlayHand = () => {
         playHand(selected, myIndex)
         setSelected([])
+    }
+
+    const handleDavi = () => {
+        if (!myTurn) return
+        offerDavi()
     }
 
     const rotated = [game.players[myIndex], game.players[(myIndex + 1) % 4], game.players[(myIndex + 2) % 4], game.players[(myIndex + 3) % 4]]
@@ -53,11 +58,13 @@ const Game = () => {
             { messageState && <p className='game-message'>{message}</p> }
 
             <button onClick={handlePlayHand} className={`play-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>PLAY</button>
-            <button onClick={() => console.log('Davi offered')} className={`multiplier-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>{game.multiplier}x</button>
+            <button onClick={handleDavi} className={`multiplier-button ${myTurn && game.players[myIndex].played.length === 0 && game.players[myIndex].hand.length !== 0 ? 'visible' : ''}`}>{game.multiplier}x</button>
 
             <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
             <Deck deck={game.deck} trump={game.trump} />
             <Scoreboard players={game.players} />
+
+            { game.davi.state && <h1>DAVI WINDOW</h1> }
         </div>
     )
 }

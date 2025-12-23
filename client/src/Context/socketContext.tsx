@@ -16,6 +16,7 @@ interface SocketContextInterface {
     leaveRoom(): void
     triggerStart(): void
     playHand(hand: Card[], myIndex: number): void
+    offerDavi(): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -121,7 +122,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('hand-played', hand)
     }
 
-    return <SocketContext.Provider value={{ rooms, game, message, messageState, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand }}>{children}</SocketContext.Provider>
+    const offerDavi = () => {
+        socket.emit('davi-offered')
+    }
+
+    return <SocketContext.Provider value={{ rooms, game, message, messageState, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand, offerDavi }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

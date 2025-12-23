@@ -18,6 +18,7 @@ export type Game = {
     lastWinner: number
     multiplier: number,
     davi: {
+        state: boolean
         last: number | undefined,
         acceptState: {
             playerOne: boolean | undefined,
