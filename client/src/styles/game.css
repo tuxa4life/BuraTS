@@ -1,9 +1,25 @@
+/* =====================================================================
+   BASE / LARGE SCREENS — original "around the table" layout.
+   The structural wrappers added for the mobile layout are made
+   invisible here (display: contents) so the original absolutely
+   positioned layout behaves exactly as it did before.
+   ===================================================================== */
+
 .game-container {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
     position: relative;
     overflow: hidden;
+}
+
+.top-bar,
+.opponents-row,
+.table-felt,
+.felt,
+.hand-dock,
+.action-row {
+    display: contents;
 }
 
 .player-bubble {
@@ -75,6 +91,9 @@
 }
 
 .card-selection {
+    /* Approx rendered card width (cards are 0.712 aspect; 0.72 overestimates
+       slightly so the hand always fits). Used for the overlap math below. */
+    --card-w: calc(min(20vh, 180px) * 0.72);
     position: absolute;
     bottom: 2vh;
     left: 50%;
@@ -83,6 +102,7 @@
     max-width: 800px;
     display: flex;
     justify-content: center;
+    align-items: flex-end;
     height: 20vh;
     min-height: 120px;
 }
@@ -91,8 +111,16 @@
     height: 100%;
     max-height: 180px;
     cursor: pointer;
-    margin: 0 3px;
     transition: 0.2s all;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+}
+
+/* Spread the cards with a small gap when they fit; overlap them just enough
+   to stay on screen when they don't. */
+.card-selection img:not(:first-child) {
+    margin-left: min(6px, calc((100% - var(--count, 6) * var(--card-w)) / (var(--count, 6) - 1)));
 }
 
 .card-selection img.selected {
@@ -301,13 +329,13 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size:  24px;
+    font-size: 24px;
     font-weight: 700;
     color: white;
 }
 
-/* Tablet and below (landscape and portrait) */
-@media screen and (max-width: 1024px) {
+/* Tablet refinements for the original layout (large screens only). */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
     .player-bubble {
         padding: 10px 12px;
         gap: 6px;
@@ -321,16 +349,6 @@
 
     .player-bubble-username {
         font-size: 12px;
-    }
-
-    .card-selection {
-        width: 95%;
-        height: 18vh;
-        min-height: 100px;
-    }
-
-    .card-selection img {
-        margin: 0 2px;
     }
 
     .play-button {
@@ -385,221 +403,14 @@
     .played-cards.left {
         transform: translate(-105%, -50%);
     }
+
     .played-cards.right {
         transform: translate(5%, -50%);
     }
 }
 
-/* Mobile devices */
-@media screen and (max-width: 768px) {
-    .player-bubble {
-        padding: 8px 10px;
-        gap: 4px;
-        border-radius: 8px;
-    }
-
-    .player-bubble.top {
-        top: 10px;
-    }
-
-    .player-bubble.left {
-        left: 10px;
-    }
-
-    .player-bubble.right {
-        right: 10px;
-    }
-
-    .player-bubble-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-        border: 2px solid transparent;
-    }
-
-    .player-bubble.active {
-        border: 3px #ef4444 solid;
-    }
-
-    .player-bubble-username {
-        font-size: 11px;
-    }
-
-    .card-selection {
-        bottom: 1vh;
-        width: 98%;
-        height: 16vh;
-        min-height: 90px;
-    }
-
-    .card-selection img {
-        margin: 0 1px;
-    }
-
-    .card-selection img.selected {
-        transform: translateY(-4vh);
-    }
-
-    .play-button {
-        bottom: 24vh;
-        padding: 10px 30px;
-        font-size: 14px;
-        border-radius: 8px;
-    }
-
-    .multiplier-button {
-        bottom: 6vh;
-        right: 5vw;
-        padding: 8px 20px;
-        font-size: 14px;
-        border-radius: 8px;
-        transform: scale(1.1);
-    }
-
-    .multiplier-button:hover {
-        transform: scale(1.15);
-    }
-
-    .deck-container {
-        bottom: 6vh;
-        left: 5vw;
-        width: 10vh;
-        height: 10vh;
-        min-width: 70px;
-        min-height: 70px;
-    }
-
-    .deck-count {
-        min-width: 40px;
-        min-height: 40px;
-        font-size: 18px;
-    }
-
-    .scoreboard {
-        top: 10px;
-        left: 10px;
-        padding: 10px;
-        border-radius: 8px;
-    }
-
-    .scoreboard h3 {
-        font-size: 12px;
-        margin-bottom: 8px;
-    }
-
-    .team-score {
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
-
-    .team-points {
-        margin-left: 3vw;
-    }
-
-    .played-cards img {
-        height: 10vh;
-        max-height: 100px;
-        min-height: 60px;
-        margin: 0 1px;
-    }
-
-    .played-cards.top {
-        transform: translate(-50%, -300%);
-    }
-    .played-cards.left {
-        transform: translate(-75%, -175%);
-    }
-    .played-cards.right {
-        transform: translate(-15%, -50%);
-    }
-}
-
-/* Small mobile devices */
-@media screen and (max-width: 480px) {
-    .player-bubble {
-        padding: 6px 8px;
-    }
-
-    .player-bubble-avatar {
-        width: 35px;
-        height: 35px;
-        font-size: 14px;
-    }
-
-    .player-bubble-username {
-        font-size: 10px;
-    }
-
-    .card-selection {
-        height: 14vh;
-        min-height: 80px;
-    }
-
-    .play-button {
-        bottom: 22vh;
-        padding: 8px 24px;
-        font-size: 13px;
-    }
-
-    .multiplier-button {
-        bottom: 5vh;
-        right: 3vw;
-        padding: 6px 16px;
-        font-size: 13px;
-        transform: scale(1);
-    }
-
-    .multiplier-button:hover {
-        transform: scale(1.05);
-    }
-
-    .deck-container {
-        bottom: 5vh;
-        left: 3vw;
-        width: 9vh;
-        height: 9vh;
-        min-width: 60px;
-        min-height: 60px;
-    }
-
-    .deck-count {
-        min-width: 35px;
-        min-height: 35px;
-        font-size: 16px;
-    }
-
-    .scoreboard {
-        padding: 8px;
-    }
-
-    .scoreboard h3 {
-        font-size: 11px;
-        margin-bottom: 6px;
-    }
-
-    .team-score {
-        font-size: 11px;
-    }
-
-    .played-cards img {
-        height: 5vh;
-        max-height: 90px;
-        min-height: 50px;
-    }
-
-    .played-cards.top {
-        transform: translate(-50%, -300%);
-    }
-    .played-cards.left {
-        transform: translate(-60%, -175%);
-    }
-    .played-cards.right {
-        transform: translate(-30%, -50%);
-    }
-}
-
-/* Landscape orientation adjustments for mobile */
-@media screen and (max-height: 500px) and (orientation: landscape) {
+/* Landscape, short large screens — original adjustments. */
+@media screen and (min-width: 769px) and (max-height: 500px) and (orientation: landscape) {
     .card-selection {
         bottom: 1vh;
         height: 25vh;
@@ -623,28 +434,240 @@
     }
 }
 
-/* Very small screens */
-@media screen and (max-width: 360px) {
+/* =====================================================================
+   MOBILE (<= 768px) — zoned layout: opponents across the top,
+   a centered table, and a docked, fanned hand.
+   ===================================================================== */
+@media screen and (max-width: 768px) {
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* ---- Top bar ---- */
+    .top-bar {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 14px 0;
+        flex-shrink: 0;
+    }
+
+    .opponents-row {
+        display: flex;
+        flex: 1;
+        justify-content: space-around;
+        align-items: flex-start;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .player-bubble,
+    .player-bubble.top,
+    .player-bubble.left,
+    .player-bubble.right {
+        position: static;
+        transform: none;
+        top: auto;
+        left: auto;
+        right: auto;
+        padding: 8px 10px;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .player-bubble.active {
+        border: 3px #ef4444 solid;
+        box-shadow: none;
+    }
+
     .player-bubble-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 12px;
+        width: clamp(34px, 11vw, 56px);
+        height: clamp(34px, 11vw, 56px);
+        border: none;
+        font-size: clamp(16px, 5vw, 22px);
+    }
+
+    .player-bubble-username {
+        font-size: clamp(10px, 3vw, 14px);
+        max-width: clamp(56px, 22vw, 120px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ---- Scoreboard chip ---- */
+    .scoreboard {
+        position: static;
+        flex-shrink: 0;
+        padding: 10px 12px;
     }
 
     .scoreboard h3 {
-        font-size: 10px;
+        font-size: clamp(10px, 2.6vw, 13px);
+        margin-bottom: 8px;
     }
 
     .team-score {
-        font-size: 10px;
+        font-size: clamp(10px, 2.6vw, 13px);
+        gap: 12px;
+        margin-bottom: 6px;
     }
 
     .team-points {
-        margin-left: 2vw;
+        margin-left: 0;
+    }
+
+    /* ---- Central table (no felt surface / shadow) ---- */
+    .table-felt {
+        display: flex;
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .felt {
+        display: block;
+        position: relative;
+        width: min(94vw, 560px);
+        height: 100%;
+        max-height: 520px;
+    }
+
+    .played-cards img {
+        height: clamp(58px, 12vh, 120px);
+        min-height: 0;
+        margin: 0 2px;
+    }
+
+    .played-cards.bottom {
+        top: auto;
+        bottom: 4%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .played-cards.top {
+        top: 4%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .played-cards.left {
+        left: 2%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .played-cards.right {
+        left: auto;
+        right: 2%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* ---- Draw pile: horizontal trump + count, no back card ---- */
+    .deck-container {
+        bottom: 6%;
+        left: 4%;
+        width: clamp(60px, 17vw, 88px);
+        height: clamp(84px, 24vw, 124px);
+        min-width: 0;
+        min-height: 0;
+    }
+
+    .deck-container .back-card {
+        display: none;
+    }
+
+    /* Trump stands upright; the remaining-deck count sits on top of it. */
+    .deck-container .trump-card {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: none;
+    }
+
+    .deck-count {
+        min-width: 0;
+        min-height: 0;
+        width: clamp(30px, 9vw, 46px);
+        height: clamp(30px, 9vw, 46px);
+        font-size: clamp(13px, 4vw, 20px);
+    }
+
+    /* ---- Hand dock ---- */
+    .hand-dock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px 10px;
+        flex-shrink: 0;
+    }
+
+    .action-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        /* Reserve space so the hand doesn't jump when controls appear. */
+        min-height: clamp(42px, 7vh, 56px);
+    }
+
+    .play-button,
+    .multiplier-button {
+        position: static;
+        bottom: auto;
+        right: auto;
+        left: auto;
+        transform: scale(0);
+        padding: clamp(10px, 1.6vh, 16px) clamp(26px, 7vw, 48px);
+        font-size: clamp(14px, 4vw, 18px);
+    }
+
+    .play-button.visible,
+    .multiplier-button.visible {
+        transform: scale(1);
+    }
+
+    .play-button.visible:hover,
+    .multiplier-button.visible:hover {
+        transform: scale(1.05);
+    }
+
+    .card-selection {
+        --card-w: calc(clamp(96px, 19vh, 168px) * 0.72);
+        position: static;
+        transform: none;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        max-width: 760px;
+        height: clamp(96px, 19vh, 168px);
+        min-height: 0;
     }
 }
 
+/* Mobile landscape — keep the hand from overflowing on short screens. */
+@media screen and (max-width: 768px) and (max-height: 520px) and (orientation: landscape) {
+    .card-selection {
+        height: clamp(70px, 32vh, 130px);
+    }
 
+    .felt {
+        max-height: none;
+    }
+}
+
+/* =====================================================================
+   Overlays (pause / davi / game over) — unchanged.
+   ===================================================================== */
 .pause-overlay {
     position: fixed;
     inset: 0;

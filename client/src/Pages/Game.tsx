@@ -110,9 +110,12 @@ const Game = () => {
     const rotated = [game.players[myIndex], game.players[(myIndex + 1) % 4], game.players[(myIndex + 2) % 4], game.players[(myIndex + 3) % 4]]
     const positions = ['bottom', 'left', 'top', 'right']
 
-    const playerCards = rotated.map((player, i) => {
-        return <PlayerCard key={player.id} username={player.username} picture={player.picture} position={positions[i]} isActive={game.turn === (myIndex + i) % 4} />
-    })
+    // Only opponents get a bubble in the top bar — you're always the bottom seat.
+    const opponentCards = rotated
+        .map((player, i) => (
+            <PlayerCard key={player.id} username={player.username} picture={player.picture} position={positions[i]} isActive={game.turn === (myIndex + i) % 4} />
+        ))
+        .slice(1)
 
     const playedHands = rotated.map((player, i) => {
         return <PlayedCards key={`played-${player.id}`} played={player.played} position={positions[i]} />
@@ -120,17 +123,26 @@ const Game = () => {
 
     return (
         <div className="game-container">
-            {playerCards}
-            {playedHands}
+            <div className="top-bar">
+                <Scoreboard players={game.players} />
+                <div className="opponents-row">{opponentCards}</div>
+            </div>
 
-            { messageState && <p className='game-message'>{message}</p> }
+            <div className="table-felt">
+                <div className="felt">
+                    {playedHands}
+                    <Deck deck={game.deck} trump={game.trump} />
+                    { messageState && <p className='game-message'>{message}</p> }
+                </div>
+            </div>
 
-            <button onClick={handlePlayHand} className={`play-button ${canShowControls ? 'visible' : ''}`}>PLAY</button>
-            <button onClick={handleDavi} className={`multiplier-button ${canShowControls ? 'visible' : ''}`}>{game.multiplier}x</button>
-
-            <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
-            <Deck deck={game.deck} trump={game.trump} />
-            <Scoreboard players={game.players} />
+            <div className="hand-dock">
+                <div className="action-row">
+                    <button onClick={handlePlayHand} className={`play-button ${canShowControls ? 'visible' : ''}`}>PLAY</button>
+                    <button onClick={handleDavi} className={`multiplier-button ${canShowControls ? 'visible' : ''}`}>{game.multiplier}x</button>
+                </div>
+                <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
+            </div>
 
             { davi.pending && (
                 <div className="pause-overlay">
