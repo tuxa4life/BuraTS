@@ -644,3 +644,128 @@
     }
 }
 
+
+.pause-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 78, 59, 0.55);
+    backdrop-filter: blur(6px);
+}
+
+.pause-card {
+    background: var(--bg-white-transparent);
+    color: var(--text-primary);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--card-border-radius);
+    text-align: center;
+    width: 90vw;
+    max-width: var(--card-max-width);
+    box-shadow: 0 24px 60px var(--shadow-dark), 0 0 40px var(--shadow-primary);
+}
+
+.pause-card h2 {
+    margin: 0 0 var(--spacing-xs);
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.pause-card p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.pause-countdown {
+    font-size: 3.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin: var(--spacing-sm) 0;
+    color: var(--text-primary);
+    text-shadow: 0 0 18px var(--shadow-primary);
+}
+
+.pause-note {
+    margin-top: var(--spacing-xs) !important;
+    font-size: 0.85rem;
+    color: var(--text-tertiary) !important;
+}
+
+.davi-card h2 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+}
+
+.davi-word {
+    font-style: italic;
+    text-transform: capitalize;
+}
+
+.gameover-scores {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: var(--spacing-md) 0;
+}
+
+.gameover-team {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: 10px 14px;
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+.gameover-team-names {
+    font-weight: 500;
+}
+
+.gameover-team-points {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.davi-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-md);
+}
+
+.davi-button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 1px solid var(--border-medium);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.davi-button:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.davi-button.raise {
+    text-transform: capitalize;
+    font-style: italic;
+}
+
+.davi-button.decline {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.davi-button.decline:hover {
+    background: rgba(239, 68, 68, 0.15);
+}

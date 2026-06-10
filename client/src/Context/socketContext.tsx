@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import type { Card, Game, Room, User } from '../types'
+import type { Card, Game, GameOver, Room, User } from '../types'
 import { useNavigate } from 'react-router-dom'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
@@ -10,13 +10,18 @@ interface SocketContextInterface {
     game: Game | null
     message: string
     messageState: boolean
+    gameOver: GameOver | null
     getRooms(): void
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
     leaveRoom(): void
     triggerStart(): void
+    setTeam(team: number): void
     playHand(hand: Card[], myIndex: number): void
     offerDavi(): void
+    respondDavi(action: 'accept' | 'decline' | 'challenge'): void
+    dismissGameOver(): void
+    rematch(): void
 }
 
 const SocketContext = createContext<SocketContextInterface | undefined>(undefined)
@@ -28,6 +33,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [message, setMessage] = useState<string>('')
     const [messageState, setMessageState] = useState<boolean>(false)
+    const [gameOver, setGameOver] = useState<GameOver | null>(null)
+
+    // Last room this client joined, so we can auto-rejoin on a reconnect and
+    // let the server clear our disconnected flag / resume a paused game.
+    const joinedRoomRef = useRef<string | null>(null)
 
     const navigate = useNavigate()
 
@@ -40,6 +50,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
                 const user = JSON.parse(savedUser)
                 socket.emit('user-registered', user)
                 setIsRegistered(true)
+
+                if (joinedRoomRef.current) {
+                    socket.emit('join-room', joinedRoomRef.current)
+                }
             }
         })
 
@@ -52,6 +66,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         })
 
         socket.on('start-game', (roomID: string) => {
+            setGameOver(null)
             navigate(`/game/${roomID}`)
         })
 
@@ -60,12 +75,29 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             setMessageState(!!message)
         })
 
+        socket.on('game-aborted', () => {
+            joinedRoomRef.current = null
+            setGame(null)
+            setMessage('')
+            setMessageState(false)
+            navigate('/')
+        })
+
+        socket.on('game-over', (data: GameOver) => {
+            // Keep joinedRoomRef so 'Rematch' can navigate back to this room's lobby.
+            setMessage('')
+            setMessageState(false)
+            setGameOver(data)
+        })
+
         return () => {
             socket.off('connect')
             socket.off('room-list')
             socket.off('game-data')
             socket.off('start-game')
             socket.off('message')
+            socket.off('game-aborted')
+            socket.off('game-over')
         }
     }, [])
 
@@ -89,6 +121,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             setIsRegistered(true)
         }
 
+        joinedRoomRef.current = roomID
         socket.emit('join-room', roomID)
     }
 
@@ -96,7 +129,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('start-triggered')
     }
 
+    const setTeam = (team: number) => {
+        socket.emit('set-team', team)
+    }
+
     const leaveRoom = () => {
+        joinedRoomRef.current = null
         socket.emit('leave-room')
     }
 
@@ -123,10 +161,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const offerDavi = () => {
-        socket.emit('davi-offered')
+        socket.emit('davi-offer')
     }
 
-    return <SocketContext.Provider value={{ rooms, game, message, messageState, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, playHand, offerDavi }}>{children}</SocketContext.Provider>
+    const respondDavi = (action: 'accept' | 'decline' | 'challenge') => {
+        socket.emit('davi-respond', action)
+    }
+
+    const dismissGameOver = () => {
+        setGameOver(null)
+        leaveRoom()
+        setGame(null)
+        navigate('/')
+    }
+
+    const rematch = () => {
+        const roomID = joinedRoomRef.current ?? game?.id
+        setGameOver(null)
+        if (roomID) navigate(`/lobby/${roomID}`)
+        else navigate('/')
+    }
+
+    return <SocketContext.Provider value={{ rooms, game, message, messageState, gameOver, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, setTeam, playHand, offerDavi, respondDavi, dismissGameOver, rematch }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {

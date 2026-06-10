@@ -17,13 +17,15 @@ export type Game = {
     trump: Card | null,
     lastWinner: number
     multiplier: number,
+    started: boolean,
+    paused: boolean,
+    disconnected: string[],
+    pauseEndsAt: number | null,
     davi: {
-        state: boolean
-        last: number | undefined,
-        acceptState: {
-            playerOne: boolean | undefined,
-            playerTwo: boolean | undefined
-        }
+        pending: boolean,
+        from: number | undefined,
+        to: number | undefined,
+        level: number
     }
 }
 
@@ -31,10 +33,21 @@ export type Player = {
     id: string,
     picture: string,
     username: string,
+    team: number,
     hand: Card[],
     played: Card[],
-    taken: Card[],
+    taken: Card[][],
     points: number
+}
+
+export type GameOverTeam = {
+    names: (string | undefined)[]
+    points: number
+}
+
+export type GameOver = {
+    message: string
+    teams: GameOverTeam[]
 }
 
 export type Suite = 'spades' | 'hearts' | 'clubs' | 'diamonds'

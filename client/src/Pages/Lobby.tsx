@@ -4,9 +4,10 @@ import { useSockets } from '../Context/socketContext'
 import { useUser } from '../Context/userContext'
 import { useNavigate, useParams } from 'react-router-dom'
 import Img from './Components/Img'
+import type { Player } from '../types'
 
 const Lobby = () => {
-    const { game, leaveRoom, joinRoom, triggerStart } = useSockets()
+    const { game, leaveRoom, joinRoom, triggerStart, setTeam } = useSockets()
     const { user } = useUser()
     const [copied, setCopied] = useState(false)
 
@@ -27,8 +28,12 @@ const Lobby = () => {
         )
     }
 
-    const isCreator = game.players[0]?.id === user?.id
-    const canStart = game.players.length === 4
+    const hostId = game.players[0]?.id
+    const myTeam = game.players.find((p) => p.id === user?.id)?.team
+    const team0 = game.players.filter((p) => p.team === 0)
+    const team1 = game.players.filter((p) => p.team === 1)
+    const isCreator = hostId === user?.id
+    const canStart = team0.length === 2 && team1.length === 2
 
     const handleCopyRoomId = () => {
         const url = window.location.origin + `/lobby/${game.id}`
@@ -52,6 +57,36 @@ const Lobby = () => {
         }
     }
 
+    const renderTeam = (players: Player[], teamIndex: number, label: string) => (
+        <div className="team-column">
+            <div className="team-header">
+                <span>{label}</span>
+                <span className={`team-count ${players.length === 2 ? 'full' : ''}`}>{players.length} / 2</span>
+            </div>
+
+            <div className="team-players">
+                {players.map((player) => (
+                    <div key={player.id} className="player-card">
+                        <Img src={player.picture} alt={player.username} className="player-avatar" />
+                        <div className="player-username">{player.username}</div>
+                        {player.id === hostId && <span className="host-badge">Host</span>}
+                    </div>
+                ))}
+                {Array.from({ length: Math.max(0, 2 - players.length) }).map((_, i) => (
+                    <div key={`empty-${teamIndex}-${i}`} className="player-card empty">
+                        Empty slot
+                    </div>
+                ))}
+            </div>
+
+            {myTeam !== teamIndex && (
+                <button className="join-team-button" onClick={() => setTeam(teamIndex)}>
+                    Join {label}
+                </button>
+            )}
+        </div>
+    )
+
     return (
         <div className="lobby-container">
             <div className="background-circle circle-top" />
@@ -60,7 +95,7 @@ const Lobby = () => {
             <div className="lobby-card">
                 <div className="lobby-header">
                     <h1 className="lobby-title">Game Lobby</h1>
-                    <p className="lobby-subtitle">Waiting for players to join</p>
+                    <p className="lobby-subtitle">Pick a side and wait for players</p>
                 </div>
 
                 <div className="room-id-container">
@@ -73,36 +108,12 @@ const Lobby = () => {
                     </div>
                 </div>
 
-                <div className="section">
-                    <div className="section-label">Room Creator</div>
-                    <div className="creator-card">
-                        <Img src={game.players[0].picture} alt={game.players[0].username} className="creator-avatar" />
-                        <div className="creator-info">
-                            <div className="creator-username">{game.players[0].username}</div>
-                            <div className="creator-badge">Host</div>
-                        </div>
-                    </div>
+                <div className="teams-container">
+                    {renderTeam(team0, 0, 'Team 1')}
+                    {renderTeam(team1, 1, 'Team 2')}
                 </div>
 
-                <div className="section">
-                    <div className="section-label players-label">
-                        <span>Players</span>
-                        <span className={game.players.length === 4 ? 'full' : ''}>{game.players.length} / 4</span>
-                    </div>
-                    <div className="players-list">
-                        {game.players.slice(1).map((player) => (
-                            <div key={player.id} className="player-card">
-                                <Img src={player.picture} alt={player.username} className="player-avatar" />
-                                <div className="player-username">{player.username}</div>
-                            </div>
-                        ))}
-                        {[...Array(Math.max(0, 4 - game.players.length))].map((_, i) => (
-                            <div key={`empty-${i}`} className="player-card empty">
-                                Waiting for player...
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                {!canStart && <p className="team-hint">Teams must be 2 vs 2 to start ({game.players.length} / 4 players)</p>}
 
                 <div className="actions">
                     {isCreator && (
