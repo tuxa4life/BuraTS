@@ -10,23 +10,27 @@ const createRoom = (id: string): Room => {
         trump: undefined,
         multiplier: 1,
         lastWinner: 0,
+        started: false,
+        paused: false,
+        disconnected: [],
+        pauseEndsAt: undefined,
         davi: {
-            last: undefined,
-            acceptState: {
-                playerOne: undefined,
-                playerTwo: undefined
-            }
+            pending: false,
+            from: undefined,
+            to: undefined,
+            level: 0
         }
     }
 
     return room
 }
 
-const createPlayer = (id: string, username: string, picture: string): Player => {
+const createPlayer = (id: string, username: string, picture: string, team: number): Player => {
     const player = {
         id,
         username,
         picture,
+        team,
         hand: [],
         played: [],
         taken: [],
@@ -39,10 +43,16 @@ const createPlayer = (id: string, username: string, picture: string): Player => 
 const playerJoin = (socket: Socket, roomID: string, rooms: Record<string, Room>): void => {
     if (!rooms[roomID]) rooms[roomID] = createRoom(roomID)
 
-    const exists = rooms[roomID].players.some((player: Player) => socket.data.id && player.id === socket.id)
+    const exists = rooms[roomID].players.some((player: Player) => socket.data.id && player.id === socket.data.id)
     if (exists) return
 
-    rooms[roomID].players.push(createPlayer(socket.data.id, socket.data.username, socket.data.picture))
+    // Auto-assign to the team with fewer players (ties go to team 0) so a full
+    // room defaults to a balanced 2 v 2; players can switch sides in the lobby.
+    const team0 = rooms[roomID].players.filter((p) => p.team === 0).length
+    const team1 = rooms[roomID].players.filter((p) => p.team === 1).length
+    const team = team0 <= team1 ? 0 : 1
+
+    rooms[roomID].players.push(createPlayer(socket.data.id, socket.data.username, socket.data.picture, team))
     socket.join(roomID)
     socket.data.roomID = roomID
 }
@@ -55,20 +65,9 @@ const leaveRoom = (socket: Socket, rooms: Record<string, Room>) => {
     if (room && room.players.find((p) => p.id === id)) {
         room.players = room.players.filter((player: Player) => player.id !== id)
         socket.leave(roomID)
+        socket.data.roomID = undefined
         if (room.players.length === 0) delete rooms[roomID]
     }
-}
-
-const disconnectPlayer = (socket: Socket, rooms: Record<string, Room>) => {
-    Object.keys(rooms).forEach((roomID) => {
-        const room = rooms[roomID]
-        if (!room) return
-
-        const wasInRoom = room.players.some((p) => p.id === socket.data.id)
-        room.players = room.players.filter((p) => p.id !== socket.data.id)
-        if (wasInRoom) socket.leave(roomID)
-        if (room.players.length === 0) delete rooms[roomID]
-    })
 }
 
 const getRooms = (rooms: Record<string, Room>) => {
@@ -82,4 +81,4 @@ const getRooms = (rooms: Record<string, Room>) => {
     return output
 }
 
-export { getRooms, playerJoin, leaveRoom, disconnectPlayer }
+export { getRooms, playerJoin, leaveRoom }

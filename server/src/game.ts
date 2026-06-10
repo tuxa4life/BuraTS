@@ -1,6 +1,25 @@
 import { type Room, type Card } from '../types.js'
 import { determineWinner, gatherPlayedCards, generateKeys, getCardPoints, shuffleDeck } from './cards.js'
 
+// Highest davi level and the score that ends the whole game.
+const MAX_DAVI = 11
+const WIN_SCORE = 11
+
+const clearDavi = (room: Room) => {
+    room.davi.pending = false
+    room.davi.from = undefined
+    room.davi.to = undefined
+    room.davi.level = 0
+}
+
+// Returns the index of the team (0 = players 0 & 2, 1 = players 1 & 3) that has
+// reached the winning score, or null if nobody has won yet.
+const getWinningTeam = (room: Room): number | null => {
+    if ((room.players[0]?.points ?? 0) >= WIN_SCORE) return 0
+    if ((room.players[1]?.points ?? 0) >= WIN_SCORE) return 1
+    return null
+}
+
 const startGame = (room: Room) => {
     if (!room) return
 
@@ -10,6 +29,11 @@ const startGame = (room: Room) => {
     room.trump = deck[deck.length - 1]
     room.multiplier = 1
     room.lastWinner = 0
+    room.started = true
+    room.paused = false
+    room.disconnected = []
+    room.pauseEndsAt = undefined
+    clearDavi(room)
 
     room.players.forEach((player) => {
         player.hand = []
@@ -21,26 +45,31 @@ const startGame = (room: Room) => {
     dealHand(room)
 }
 
-const handlePlayedHand = (hand: Card[], room: Room): { allPlayed: boolean, winnerIndex: number | null } => {
+// Records a single play and advances the turn. Does NOT resolve a completed
+// trick — that is deferred (see resolveTrick) so all four cards can be shown
+// for a moment before the winner takes them.
+const handlePlayedHand = (hand: Card[], room: Room): { allPlayed: boolean } => {
     const player = room?.players[room.turn!]
     player!.played = hand
     player!.hand = player!.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
     room!.turn = (room?.turn! + 1) % 4
 
     const allPlayed = room.players.every((player) => player.played.length !== 0)
-    let winnerIndex = null
-    if (allPlayed) {
-        winnerIndex = determineWinner(room.players, room.trump!, room.lastWinner)
-        room.lastWinner = winnerIndex
-        room.players[winnerIndex]!.taken.push(...gatherPlayedCards(room.players))
+    return { allPlayed }
+}
 
-        room.turn = room.lastWinner
-        room.players.forEach((player) => (player.played = []))
+// Resolves a completed trick: the winner takes the four played cards, played
+// hands are cleared, and the next cards are dealt.
+const resolveTrick = (room: Room): { winnerIndex: number } => {
+    const winnerIndex = determineWinner(room.players, room.trump!, room.lastWinner)
+    room.lastWinner = winnerIndex
+    room.players[winnerIndex]!.taken.push(...gatherPlayedCards(room.players))
 
-        dealHand(room)
-    }
+    room.turn = room.lastWinner
+    room.players.forEach((player) => (player.played = []))
 
-    return { allPlayed, winnerIndex }
+    dealHand(room)
+    return { winnerIndex }
 }
 
 const startRound = (room: Room) => {
@@ -51,6 +80,7 @@ const startRound = (room: Room) => {
     room.turn = room.lastWinner
     room.trump = deck[deck.length - 1]
     room.multiplier = 1
+    clearDavi(room)
 
     room.players.forEach((player) => {
         player.hand = []
@@ -61,7 +91,14 @@ const startRound = (room: Room) => {
     dealHand(room)
 }
 
-const handleRoundOver = (room: Room): string => {
+type RoundResult = { message: string, gameOver: boolean, winnerText?: string }
+
+const winnerMessage = (room: Room, team: number): string => {
+    const [a, b] = team === 0 ? [0, 2] : [1, 3]
+    return `${room.players[a]!.username} & ${room.players[b]!.username} won the game!`
+}
+
+const handleRoundOver = (room: Room): RoundResult => {
     let teamA = 0
     let teamB = 0
 
@@ -87,7 +124,114 @@ const handleRoundOver = (room: Room): string => {
         text = 'The round was a draw!'
     }
 
-    return text
+    const winningTeam = getWinningTeam(room)
+    if (winningTeam !== null) {
+        return { message: text, gameOver: true, winnerText: winnerMessage(room, winningTeam) }
+    }
+    return { message: text, gameOver: false }
+}
+
+// Bura: a hand of five cards all of the trump suit, played at once. It instantly
+// wins the round for the player's team, regardless of accumulated card points.
+const isBura = (room: Room, hand: Card[]): boolean => {
+    const trumpSuite = room.trump?.suite
+    return hand.length === 5 && !!trumpSuite && hand.every((c) => c.suite === trumpSuite)
+}
+
+const handleBura = (room: Room, playerIndex: number): RoundResult => {
+    const team = playerIndex % 2
+    const [a, b] = team === 0 ? [0, 2] : [1, 3]
+    room.players[a]!.points += room.multiplier
+    room.players[b]!.points += room.multiplier
+
+    const message = `${room.players[playerIndex]!.username} called Bura! ${room.players[a]!.username} & ${room.players[b]!.username} win the round.`
+
+    const won = getWinningTeam(room)
+    if (won !== null) {
+        return { message, gameOver: true, winnerText: winnerMessage(room, won) }
+    }
+    return { message, gameOver: false }
+}
+
+// Player on turn offers/raises davi. Returns true if the offer was opened.
+const offerDavi = (room: Room, playerIndex: number): boolean => {
+    if (!room.started || room.paused) return false
+    if (room.davi.pending) return false
+    if (room.turn !== playerIndex) return false
+    // Only before this player has played into the current trick.
+    if ((room.players[playerIndex]?.played.length ?? 0) !== 0) return false
+    if (room.multiplier + 1 > MAX_DAVI) return false
+
+    room.davi.pending = true
+    room.davi.from = playerIndex
+    room.davi.to = (playerIndex + 1) % 4
+    room.davi.level = room.multiplier + 1
+    return true
+}
+
+type DaviResponse =
+    | { type: 'pending' }                              // still pending (accepted to continue, or challenged back)
+    | { type: 'round-over', message: string, gameOver: boolean, winnerText?: string }
+    | null                                             // invalid
+
+// Challenged player responds to a pending davi.
+const respondDavi = (room: Room, playerIndex: number, action: 'accept' | 'decline' | 'challenge'): DaviResponse => {
+    if (!room.davi.pending) return null
+    if (room.davi.to !== playerIndex) return null
+
+    if (action === 'accept') {
+        room.multiplier = room.davi.level
+        clearDavi(room)
+        return { type: 'pending' }
+    }
+
+    if (action === 'challenge') {
+        if (room.davi.level + 1 > MAX_DAVI) return null // can't raise past the cap
+        room.davi.level += 1
+        // Swap roles: the challenge bounces back to the original offerer.
+        const newTo = room.davi.from
+        room.davi.from = room.davi.to
+        room.davi.to = newTo
+        return { type: 'pending' }
+    }
+
+    // decline: the challenged player's team forfeits the round at the current
+    // accepted stake (room.multiplier); the offering team scores it.
+    const winningTeam = (room.davi.from ?? 0) % 2
+    const [a, b] = winningTeam === 0 ? [0, 2] : [1, 3]
+    room.players[a]!.points += room.multiplier
+    room.players[b]!.points += room.multiplier
+    const declinerName = room.players[room.davi.to!]?.username
+    const message = `${declinerName} declined! ${room.players[a]!.username} & ${room.players[b]!.username} win the round.`
+    clearDavi(room)
+
+    const won = getWinningTeam(room)
+    if (won !== null) {
+        return { type: 'round-over', message, gameOver: true, winnerText: winnerMessage(room, won) }
+    }
+    return { type: 'round-over', message, gameOver: false }
+}
+
+// Return a finished room to a fresh lobby state, keeping its players so they can
+// rematch. A subsequent startGame fully re-initialises play.
+const resetRoomToLobby = (room: Room) => {
+    room.deck = []
+    room.turn = null
+    room.trump = undefined
+    room.multiplier = 1
+    room.lastWinner = 0
+    room.started = false
+    room.paused = false
+    room.disconnected = []
+    room.pauseEndsAt = undefined
+    clearDavi(room)
+
+    room.players.forEach((player) => {
+        player.hand = []
+        player.played = []
+        player.taken = []
+        player.points = 0
+    })
 }
 
 const dealHand = (room: Room) => {
@@ -102,4 +246,4 @@ const dealHand = (room: Room) => {
     }
 }
 
-export { startGame, handlePlayedHand, startRound, handleRoundOver }
+export { startGame, handlePlayedHand, resolveTrick, startRound, handleRoundOver, offerDavi, respondDavi, isBura, handleBura, resetRoomToLobby }

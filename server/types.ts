@@ -3,6 +3,7 @@ export type Player = {
     id: string,
     picture: string,
     username: string,
+    team: number,
     hand: Card[],
     played: Card[],
     taken: Card[][],
@@ -17,12 +18,15 @@ export type Room = {
     trump: Card | undefined,
     lastWinner: number
     multiplier: number
+    started: boolean
+    paused: boolean
+    disconnected: string[]
+    pauseEndsAt: number | undefined
     davi: {
-        last: number | undefined,
-        acceptState: {
-            playerOne: boolean | undefined,
-            playerTwo: boolean | undefined
-        }
+        pending: boolean,        // an offer is awaiting a response
+        from: number | undefined, // index of the player who offered/raised
+        to: number | undefined,   // index of the challenged player who must respond
+        level: number            // the offered multiplier level (2..11), 0 when idle
     }
 }
 
