@@ -24,12 +24,18 @@ const CardSelection = ({ hand, trump, selected, setSelected }: { hand: Card[], t
         })
     }
 
-    const cards = sortHand().map((card) => {
+    // Give every card a z-index fixed to its position in the hand (left-to-right),
+    // so stacking is deterministic. Selected cards are boosted by a constant but
+    // keep their positional order, so selecting/deselecting in any order never
+    // reshuffles which card sits on top.
+    const cards = sortHand().map((card, i) => {
         const isSelected = selected.some((c) => c.name === card.name)
-        return <img key={'hand-' + card.name} src={`/cards/${card.name}.png`} alt="" className={isSelected ? 'selected' : ''} onClick={() => toggleCard(card)} />
+        return <img key={'hand-' + card.name} src={`/cards/${card.name}.png`} alt="" className={isSelected ? 'selected' : ''} style={{ zIndex: isSelected ? 100 + i : i }} onClick={() => toggleCard(card)} />
     })
 
-    return <div className="card-selection">{cards}</div>
+    // Expose the card count so the CSS can overlap the hand only as much as
+    // needed to keep every card on screen (see .card-selection in game.css).
+    return <div className="card-selection" style={{ '--count': cards.length } as React.CSSProperties}>{cards}</div>
 }
 
 export default CardSelection
