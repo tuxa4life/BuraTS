@@ -544,6 +544,11 @@
         margin: 0 2px;
     }
 
+    /* Count-aware overlap (fed by --played-overlap) so many cards stay on screen. */
+    .played-cards img:not(:first-child) {
+        margin-left: calc(2px - var(--played-overlap, 0px));
+    }
+
     .played-cards.bottom {
         top: auto;
         bottom: 4%;

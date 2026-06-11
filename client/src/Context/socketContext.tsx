@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import type { Card, Game, GameOver, Room, User } from '../types'
+import type { Card, ChatMessage, Game, GameOver, Room, User } from '../types'
 import { useNavigate } from 'react-router-dom'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
@@ -11,6 +11,8 @@ interface SocketContextInterface {
     message: string
     messageState: boolean
     gameOver: GameOver | null
+    chatMessages: ChatMessage[]
+    sendChat(text: string): void
     getRooms(): void
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
@@ -34,6 +36,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const [message, setMessage] = useState<string>('')
     const [messageState, setMessageState] = useState<boolean>(false)
     const [gameOver, setGameOver] = useState<GameOver | null>(null)
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
 
     // Last room this client joined, so we can auto-rejoin on a reconnect and
     // let the server clear our disconnected flag / resume a paused game.
@@ -75,11 +78,16 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             setMessageState(!!message)
         })
 
+        socket.on('chat-message', (message: ChatMessage) => {
+            setChatMessages((prev) => [...prev, message])
+        })
+
         socket.on('game-aborted', () => {
             joinedRoomRef.current = null
             setGame(null)
             setMessage('')
             setMessageState(false)
+            setChatMessages([])
             navigate('/')
         })
 
@@ -96,12 +104,19 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             socket.off('game-data')
             socket.off('start-game')
             socket.off('message')
+            socket.off('chat-message')
             socket.off('game-aborted')
             socket.off('game-over')
         }
     }, [])
 
     const getRooms = () => socket.emit('get-room-list')
+
+    const sendChat = (text: string) => {
+        const trimmed = text.trim()
+        if (!trimmed) return
+        socket.emit('chat-message', trimmed)
+    }
 
     const registerOnSockets = (user: User) => {
         socket.emit('user-registered', user)
@@ -182,7 +197,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         else navigate('/')
     }
 
-    return <SocketContext.Provider value={{ rooms, game, message, messageState, gameOver, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, setTeam, playHand, offerDavi, respondDavi, dismissGameOver, rematch }}>{children}</SocketContext.Provider>
+    return <SocketContext.Provider value={{ rooms, game, message, messageState, gameOver, chatMessages, sendChat, getRooms, registerOnSockets, joinRoom, leaveRoom, triggerStart, setTeam, playHand, offerDavi, respondDavi, dismissGameOver, rematch }}>{children}</SocketContext.Provider>
 }
 
 export const useSockets = (): SocketContextInterface => {
