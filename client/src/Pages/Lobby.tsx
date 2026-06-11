@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react'
 import '../styles/lobby.css'
-import { useSockets } from '../Context/socketContext'
-import { useUser } from '../Context/userContext'
+import { useSockets } from '../Context/useSockets'
+import { useUser } from '../Context/useUser'
 import { useNavigate, useParams } from 'react-router-dom'
 import Img from './Components/Img'
+import NotFound from './Components/NotFound'
+import StatusScreen, { TimedFallback } from './Components/StatusScreen'
 import type { Player } from '../types'
+
+// How long to keep showing "Joining…" before concluding the room isn't there.
+// The connection gate in App already guarantees the socket is up, so a real
+// join answers in well under a second.
+const JOIN_TIMEOUT_MS = 10 * 1000
 
 const Lobby = () => {
     const { game, leaveRoom, joinRoom, triggerStart, setTeam } = useSockets()
@@ -22,9 +29,11 @@ const Lobby = () => {
 
     if (!game) {
         return (
-            <div>
-                CANNOT FIND THE GAME. <u onClick={() => navigate('/')}>Click here to go back</u>
-            </div>
+            <TimedFallback
+                timeoutMs={JOIN_TIMEOUT_MS}
+                loading={<StatusScreen loading title="Joining room…" message="Pulling up a chair at the table." />}
+                fallback={<NotFound title="Room not found" message="This room may have been closed, or the link is no longer valid." />}
+            />
         )
     }
 

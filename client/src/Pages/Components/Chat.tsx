@@ -10,13 +10,23 @@ type ChatProps = {
 }
 
 const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
-    const [open, setOpen] = useState(false)
+    const [open, setOpenRaw] = useState(false)
     const [draft, setDraft] = useState('')
-    const [unread, setUnread] = useState(0)
     const [isFullscreen, setIsFullscreen] = useState(false)
 
+    // How many messages were in the list when the panel was last opened or
+    // closed. Unread is derived from it, so no effect has to track arrivals.
+    const [seenCount, setSeenCount] = useState(messages.length)
+
     const listRef = useRef<HTMLDivElement>(null)
-    const seenCount = useRef(messages.length)
+
+    const setOpen = (next: boolean) => {
+        // Opening shows everything; closing means everything so far was seen.
+        setSeenCount(messages.length)
+        setOpenRaw(next)
+    }
+
+    const unread = open ? 0 : messages.slice(seenCount).filter((m) => m.senderId !== currentUserId).length
 
     // Keep the icon in sync with the actual fullscreen state (incl. Esc exits).
     useEffect(() => {
@@ -32,19 +42,6 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
             document.documentElement.requestFullscreen().catch(() => {})
         }
     }
-
-    // Track unread messages that arrive while the panel is closed.
-    useEffect(() => {
-        if (open) {
-            seenCount.current = messages.length
-            setUnread(0)
-            return
-        }
-        const fresh = messages.slice(seenCount.current)
-        const incoming = fresh.filter((m) => m.senderId !== currentUserId).length
-        if (incoming > 0) setUnread((u) => u + incoming)
-        seenCount.current = messages.length
-    }, [messages, open, currentUserId])
 
     // Keep the conversation pinned to the latest message while open.
     useEffect(() => {
@@ -65,7 +62,7 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
         <>
             <button
                 className={`chat-toggle ${open ? 'open' : ''}`}
-                onClick={() => setOpen((o) => !o)}
+                onClick={() => setOpen(!open)}
                 aria-label={open ? 'Close chat' : 'Open chat'}
             >
                 {open ? <CloseIcon /> : <ChatIcon />}

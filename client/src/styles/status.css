@@ -1,0 +1,149 @@
+/* Full-screen status screens (connecting / joining / not found / server down)
+   — same design language as the lobby and pause overlays: felt gradient,
+   blurred glow circles, translucent card with a green border, ghost button. */
+
+.status-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.status-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--bg-circle);
+}
+
+.status-circle.top {
+    top: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    filter: blur(60px);
+}
+
+.status-circle.bottom {
+    bottom: -15%;
+    left: -8%;
+    width: 600px;
+    height: 600px;
+    filter: blur(80px);
+}
+
+.status-card {
+    width: 90vw;
+    max-width: var(--card-max-width);
+    background: var(--bg-white-transparent);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 24px 60px var(--shadow-dark), 0 0 40px var(--shadow-primary);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    animation: status-rise 0.45s ease-out;
+}
+
+@keyframes status-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Three fanned face-down cards. While loading they bob in a gentle wave. */
+.status-fan {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.status-fan img {
+    width: 64px;
+    border-radius: 6px;
+    box-shadow: 0 8px 18px var(--shadow-dark);
+}
+
+.status-fan img:nth-child(1) {
+    transform: rotate(-14deg) translate(10px, 8px);
+}
+
+.status-fan img:nth-child(2) {
+    position: relative;
+    z-index: 1;
+}
+
+.status-fan img:nth-child(3) {
+    transform: rotate(14deg) translate(-10px, 8px);
+}
+
+/* `translate` composes with the fan's `transform`, so the offsets survive. */
+.status-fan.loading img {
+    animation: status-bob 1.4s ease-in-out infinite;
+}
+
+.status-fan.loading img:nth-child(2) {
+    animation-delay: 0.18s;
+}
+
+.status-fan.loading img:nth-child(3) {
+    animation-delay: 0.36s;
+}
+
+@keyframes status-bob {
+    0%, 100% {
+        translate: 0 0;
+    }
+    50% {
+        translate: 0 -8px;
+    }
+}
+
+.status-title {
+    margin: 0 0 var(--spacing-xs);
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.status-message {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.status-button {
+    margin-top: var(--spacing-md);
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border-medium);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.status-button:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+@media (max-width: 480px) {
+    .status-card {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .status-fan img {
+        width: 52px;
+    }
+}

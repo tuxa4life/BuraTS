@@ -10,7 +10,9 @@ const CardSelection = ({ hand, trump, selected, setSelected }: { hand: Card[], t
         }
 
         const order = suitePriority[trump.suite]
-        return hand.sort((a, b) => order.indexOf(a.suite) - order.indexOf(b.suite))
+        // Sort a copy — `hand` is game state (game.players[i].hand) and React
+        // state must not be mutated in place during render.
+        return [...hand].sort((a, b) => order.indexOf(a.suite) - order.indexOf(b.suite))
     }
 
     const toggleCard = (card: Card) => {

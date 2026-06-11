@@ -1,5 +1,33 @@
 import type { Socket } from 'socket.io'
-import type { Player, Room } from '../types.js'
+import type { GameView, Player, Room } from '../types.js'
+
+// Projects the room onto what one client may see. Hands other than the
+// viewer's own and the deck order are redacted to counts, so reading the
+// socket payload in devtools reveals nothing the player couldn't see at a
+// real table. The server's `room` stays the only complete state.
+const viewFor = (room: Room, viewerId: string | undefined): GameView => ({
+    id: room.id,
+    turn: room.turn,
+    trump: room.trump,
+    lastWinner: room.lastWinner,
+    multiplier: room.multiplier,
+    started: room.started,
+    paused: room.paused,
+    disconnected: room.disconnected,
+    pauseEndsAt: room.pauseEndsAt,
+    davi: room.davi,
+    deckCount: room.deck.length,
+    players: room.players.map((p) => ({
+        id: p.id,
+        username: p.username,
+        picture: p.picture,
+        team: p.team,
+        points: p.points,
+        played: p.played,
+        handCount: p.hand.length,
+        hand: p.id === viewerId ? p.hand : [],
+    })),
+})
 
 const createRoom = (id: string): Room => {
     const room = {
@@ -81,4 +109,4 @@ const getRooms = (rooms: Record<string, Room>) => {
     return output
 }
 
-export { getRooms, playerJoin, leaveRoom }
+export { getRooms, playerJoin, leaveRoom, viewFor }

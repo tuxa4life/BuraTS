@@ -51,7 +51,9 @@ const sortHand = (cards: Card[], trump: Card): Card[] => {
     }
 
     const order = suitePriority[trump.suite]
-    return cards.sort((a, b) => {
+    // Sort a copy: callers pass live game state (player.played / player.hand)
+    // and sorting it in place would silently reorder the room state.
+    return [...cards].sort((a, b) => {
         const suiteDiff = order.indexOf(a.suite) - order.indexOf(b.suite)
         if (suiteDiff !== 0) return suiteDiff
 
@@ -100,4 +102,4 @@ const gatherPlayedCards = (players: Player[]): Card[][] => {
     return output
 }
 
-export { generateKeys, shuffleDeck, gatherPlayedCards, determineWinner, getCardPoints }
+export { generateKeys, shuffleDeck, gatherPlayedCards, determineWinner, getCardPoints, sortHand }

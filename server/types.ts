@@ -30,6 +30,19 @@ export type Room = {
     }
 }
 
+// Wire format. What a single client is allowed to see: it gets its own hand,
+// only counts for everyone else's hand and the deck, and no taken piles. This
+// is the contract mirrored by client/src/types.ts — keep the two in sync.
+export type PlayerView = Omit<Player, 'hand' | 'taken'> & {
+    hand: Card[]        // full for the viewer, [] for everyone else
+    handCount: number
+}
+
+export type GameView = Omit<Room, 'players' | 'deck'> & {
+    players: PlayerView[]
+    deckCount: number
+}
+
 // Cards
 export enum Suite { spades = 'spades', hearts = 'hearts', clubs = 'clubs', diamonds = 'diamonds' }
 export type Card = {

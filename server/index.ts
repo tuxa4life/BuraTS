@@ -3,9 +3,9 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import { logOutputs, rl } from './src/logs.js'
-import { handlePlayedHand, resolveTrick, handleRoundOver, handleBura, isBura, offerDavi, respondDavi, resetRoomToLobby, startGame, startRound } from './src/game.js'
+import { handlePlayedHand, resolveTrick, handleRoundOver, handleBura, isBura, offerDavi, respondDavi, resetRoomToLobby, startGame, startRound, validatePlay, applyPlay } from './src/game.js'
 import type { Card, Room } from './types.js'
-import { getRooms, leaveRoom, playerJoin } from './src/rooms.js'
+import { getRooms, leaveRoom, playerJoin, viewFor } from './src/rooms.js'
 
 const app = express()
 app.use(cors())
@@ -37,6 +37,34 @@ const clearPauseTimer = (roomID: string) => {
     }
 }
 
+// Sends every connected socket in the room its own redacted view of the game
+// (own hand only, counts for everything hidden — see viewFor). The full Room
+// object must never be emitted: it contains all hands and the deck order.
+const emitGameData = (roomID: string) => {
+    const room = rooms[roomID]
+    if (!room) return
+    io.in(roomID).fetchSockets()
+        .then((sockets) => sockets.forEach((s) => s.emit('game-data', viewFor(room, s.data.id))))
+        .catch(() => {})
+}
+
+// Marks a player as away from a started game: their seat is kept, the game
+// pauses and the reconnect window opens (started once, at the first drop).
+// Shared by the disconnect handler and by leave-room during a started game.
+const pauseForPlayer = (roomID: string, userId: string) => {
+    const room = rooms[roomID]
+    if (!room || !room.started) return
+
+    if (!room.disconnected.includes(userId)) room.disconnected.push(userId)
+    room.paused = true
+    if (!pauseTimers[roomID]) {
+        room.pauseEndsAt = Date.now() + PAUSE_MS
+        pauseTimers[roomID] = setTimeout(() => abortGame(roomID), PAUSE_MS)
+        console.log(`Pausing game in room "${roomID}" — waiting for ${room.disconnected.length} player(s)`)
+    }
+    emitGameData(roomID)
+}
+
 const abortGame = (roomID: string) => {
     clearPauseTimer(roomID)
     const room = rooms[roomID]
@@ -66,7 +94,7 @@ const endGame = (roomID: string, message: string) => {
     // Keep the room and its players alive in a fresh lobby state so they can
     // rematch; a later start-triggered fully re-initialises the game.
     resetRoomToLobby(room)
-    io.to(roomID).emit('game-data', room)
+    emitGameData(roomID)
     io.emit('room-list', getRooms(rooms))
 }
 
@@ -89,6 +117,10 @@ io.on('connection', (socket: Socket) => {
             console.log(`Warning: join-room called without user registration for ${socket.id.slice(0, 6)}`)
             return
         }
+
+        // The client sanitises room IDs, but nothing stops a handcrafted emit —
+        // enforce the same guarantees here (non-empty, short, no whitespace).
+        if (typeof roomID !== 'string' || roomID.length === 0 || roomID.length > 14 || /\s/.test(roomID)) return
 
         const room = rooms[roomID]
         const alreadyInRoom = !!room && room.players.some((p) => p.id === socket.data.id)
@@ -120,14 +152,14 @@ io.on('connection', (socket: Socket) => {
             // Only fan out to the whole room when state actually changed (resume).
             // Otherwise just sync the reconnecting socket — broadcasting on every
             // re-join would amplify any client-side re-join into room-wide churn.
-            if (resumed) io.to(roomID).emit('game-data', room)
-            else socket.emit('game-data', room)
+            if (resumed) emitGameData(roomID)
+            else socket.emit('game-data', viewFor(room, socket.data.id))
             return
         }
 
         playerJoin(socket, roomID, rooms)
         io.emit('room-list', getRooms(rooms))
-        io.to(roomID).emit('game-data', rooms[roomID])
+        emitGameData(roomID)
     })
 
     socket.on('set-team', (team: number) => {
@@ -139,7 +171,7 @@ io.on('connection', (socket: Socket) => {
         if (!player) return
 
         player.team = team
-        io.to(socket.data.roomID).emit('game-data', room)
+        emitGameData(socket.data.roomID)
     })
 
     socket.on('start-triggered', () => {
@@ -159,14 +191,26 @@ io.on('connection', (socket: Socket) => {
 
         io.to(roomID).emit('start-game', roomID)
         startGame(room)
-        io.to(roomID).emit('game-data', room)
+        emitGameData(roomID)
     })
 
     socket.on('leave-room', () => {
         const roomID = socket.data.roomID
+        const room = rooms[roomID]
+
+        // Leaving a started game must not free the seat — the 4-player
+        // invariants would break and round bookkeeping would crash on the
+        // missing player. Treat it like a disconnect instead: keep the seat,
+        // pause, and let the reconnect window (or the abort timer) decide.
+        if (room?.started && room.players.some((p) => p.id === socket.data.id)) {
+            socket.leave(roomID)
+            socket.data.roomID = undefined
+            pauseForPlayer(roomID, socket.data.id)
+            return
+        }
 
         leaveRoom(socket, rooms)
-        io.to(roomID).emit('game-data', rooms[roomID])
+        emitGameData(roomID)
         io.emit('room-list', getRooms(rooms))
     })
 
@@ -186,19 +230,12 @@ io.on('connection', (socket: Socket) => {
                 // Started game: keep the player's seat, pause and wait for them
                 // to reconnect. The 2-minute window starts at the first drop and
                 // is not extended by additional disconnects.
-                if (!room.disconnected.includes(userId)) room.disconnected.push(userId)
-                room.paused = true
-                if (!pauseTimers[roomID]) {
-                    room.pauseEndsAt = Date.now() + PAUSE_MS
-                    pauseTimers[roomID] = setTimeout(() => abortGame(roomID), PAUSE_MS)
-                    console.log(`Pausing game in room "${roomID}" — waiting for ${room.disconnected.length} player(s)`)
-                }
-                io.to(roomID).emit('game-data', room)
+                pauseForPlayer(roomID, userId)
             } else {
                 // Lobby: remove the player as before.
                 room.players = room.players.filter((p) => p.id !== userId)
                 if (room.players.length === 0) delete rooms[roomID]
-                if (rooms[roomID]) io.to(roomID).emit('game-data', rooms[roomID])
+                emitGameData(roomID)
             }
         })
 
@@ -212,36 +249,41 @@ io.on('connection', (socket: Socket) => {
         if (room.paused) return
         if (room.davi.pending) return
 
+        // Reject malformed payloads before any game logic touches them.
+        if (!Array.isArray(hand) || hand.some((c) => !c || typeof c.suite !== 'string' || typeof c.value !== 'string')) return
+
         // A completed trick is being revealed for a few seconds; ignore any
         // further plays until it has resolved.
         if (room.players.length === 4 && room.players.every((p) => p.played.length !== 0)) return
 
+        // Binding rule check: the sender must be the seated player whose turn
+        // it is, playing cards genuinely from their own hand (see validatePlay).
+        const playerIndex = room.players.findIndex((p) => p.id === socket.data.id)
+        if (playerIndex === -1) return
+        if (!validatePlay(room, playerIndex, hand)) return
+
         // Bura: five trump cards played at once instantly wins the round.
         if (isBura(room, hand)) {
-            const playerIndex = room.turn ?? 0
-            const player = room.players[playerIndex]
-            if (player) {
-                player.played = hand
-                player.hand = player.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
-            }
-            io.to(roomID).emit('game-data', room)
+            applyPlay(room.players[playerIndex]!, hand)
+            emitGameData(roomID)
 
             const result = handleBura(room, playerIndex)
             io.to(roomID).emit('message', result.message)
             setTimeout(() => {
+                if (!rooms[roomID]) return
                 if (result.gameOver) {
                     endGame(roomID, result.winnerText ?? result.message)
                     return
                 }
                 startRound(room)
                 io.to(roomID).emit('message', '')
-                io.to(roomID).emit('game-data', room)
+                emitGameData(roomID)
             }, 3000)
             return
         }
 
         const { allPlayed } = handlePlayedHand(hand, room)
-        io.to(roomID).emit('game-data', room)
+        emitGameData(roomID)
 
         if (!allPlayed) return
 
@@ -250,7 +292,7 @@ io.on('connection', (socket: Socket) => {
         setTimeout(() => {
             if (!rooms[roomID]) return
             const { winnerIndex } = resolveTrick(room)
-            io.to(roomID).emit('game-data', room)
+            emitGameData(roomID)
 
             const roundOver = room.deck.length === 0
             const emptyHands = room.players.every((player) => player.hand.length === 0)
@@ -259,13 +301,14 @@ io.on('connection', (socket: Socket) => {
                 io.to(roomID).emit('message', message)
 
                 setTimeout(() => {
+                    if (!rooms[roomID]) return
                     if (gameOver) {
                         endGame(roomID, winnerText ?? message)
                         return
                     }
                     startRound(room)
                     io.to(roomID).emit('message', '')
-                    io.to(roomID).emit('game-data', room)
+                    emitGameData(roomID)
                 }, 3000)
             } else {
                 io.to(roomID).emit('message', `${room.players[winnerIndex]?.username} takes!`)
@@ -302,7 +345,7 @@ io.on('connection', (socket: Socket) => {
         if (offererIndex === -1) return
 
         if (offerDavi(room, offererIndex)) {
-            io.to(socket.data.roomID).emit('game-data', room)
+            emitGameData(socket.data.roomID)
         }
     })
 
@@ -319,21 +362,22 @@ io.on('connection', (socket: Socket) => {
 
         if (result.type === 'pending') {
             // Accepted-to-continue, or challenged back: just push the new state.
-            io.to(roomID).emit('game-data', room)
+            emitGameData(roomID)
             return
         }
 
         // Declined: round ends immediately.
-        io.to(roomID).emit('game-data', room)
+        emitGameData(roomID)
         io.to(roomID).emit('message', result.message)
         setTimeout(() => {
+            if (!rooms[roomID]) return
             if (result.gameOver) {
                 endGame(roomID, result.winnerText ?? result.message)
                 return
             }
             startRound(room)
             io.to(roomID).emit('message', '')
-            io.to(roomID).emit('game-data', room)
+            emitGameData(roomID)
         }, 3000)
     })
 })

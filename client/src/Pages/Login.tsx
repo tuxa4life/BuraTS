@@ -2,8 +2,9 @@ import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
 import { jwtDecode } from 'jwt-decode'
 import '../styles/login.css'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '../Context/userContext'
+import { useUser } from '../Context/useUser'
 import { useEffect } from 'react'
+import { loadStoredUser } from '../utils/storage'
 
 interface JwtData {
     name: string
@@ -23,8 +24,8 @@ const Login = () => {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('user')) navigate('/')
-    }, [])
+        if (loadStoredUser()) navigate('/')
+    }, [navigate])
 
     return (
         <div className="login-container">

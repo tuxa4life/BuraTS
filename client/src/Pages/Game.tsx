@@ -1,8 +1,8 @@
-import { useNavigate, useParams } from 'react-router-dom'
-import { useSockets } from '../Context/socketContext'
+import { useParams } from 'react-router-dom'
+import { useSockets } from '../Context/useSockets'
 import '../styles/game.css'
 import PlayerCard from './Components/PlayerCard'
-import { useUser } from '../Context/userContext'
+import { useUser } from '../Context/useUser'
 import CardSelection from './Components/CardSelection'
 import Deck from './Components/Deck'
 import Scoreboard from './Components/Scoreboard'
@@ -10,39 +10,44 @@ import { useEffect, useState } from 'react'
 import type { Card } from '../types'
 import PlayedCards from './Components/PlayedCards'
 import Chat from './Components/Chat'
+import NotFound from './Components/NotFound'
+import StatusScreen, { TimedFallback } from './Components/StatusScreen'
+
+// How long to keep showing "Joining…" before concluding the game isn't there.
+// The connection gate in App already guarantees the socket is up, so a real
+// rejoin answers in well under a second.
+const JOIN_TIMEOUT_MS = 10 * 1000
 
 const Game = () => {
     const [selected, setSelected] = useState<Card[]>([])
-    const [remaining, setRemaining] = useState<number | null>(null)
 
-    const { game, message, messageState, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom } = useSockets()
+    const { game, message, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom } = useSockets()
     const { user } = useUser()
-    const navigate = useNavigate()
     const { roomID } = useParams()
 
     // Re-attach this socket to the room on (re)mount — e.g. after a refresh or
     // reconnect — so the server can clear our disconnected flag and resume.
-    // Intentionally excludes `joinRoom` from deps: it gets a new identity on
-    // every SocketProvider render, so including it would re-fire on every
-    // game-data update and cause an infinite join-room loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // joinRoom is memoized with a stable identity, so it is safe in the deps.
     useEffect(() => {
         if (roomID && user) joinRoom(roomID)
-    }, [roomID, user])
+    }, [roomID, user, joinRoom])
 
-    // Live countdown for the pause/reconnect window.
+    // Live countdown for the pause/reconnect window. State is only written from
+    // the interval callback (never synchronously in the effect), and each tick
+    // is tagged with its window's deadline so a value left over from an earlier
+    // pause is ignored. Until the first tick the display falls back to '2:00',
+    // which is exactly what a fresh window shows anyway.
     const pauseEndsAt = game?.pauseEndsAt ?? null
     const isPaused = !!game?.paused
+    const [tick, setTick] = useState<{ endsAt: number, remaining: number } | null>(null)
     useEffect(() => {
-        if (!isPaused || !pauseEndsAt) {
-            setRemaining(null)
-            return
-        }
-        const tick = () => setRemaining(Math.max(0, Math.ceil((pauseEndsAt - Date.now()) / 1000)))
-        tick()
-        const interval = setInterval(tick, 500)
+        if (!isPaused || !pauseEndsAt) return
+        const interval = setInterval(() => {
+            setTick({ endsAt: pauseEndsAt, remaining: Math.max(0, Math.ceil((pauseEndsAt - Date.now()) / 1000)) })
+        }, 500)
         return () => clearInterval(interval)
     }, [isPaused, pauseEndsAt])
+    const remaining = tick && tick.endsAt === pauseEndsAt ? tick.remaining : null
 
     if (gameOver) {
         return (
@@ -73,9 +78,11 @@ const Game = () => {
 
     if (!game || !game.trump) {
         return (
-            <div>
-                Game not found. <u onClick={() => navigate('/')}>Click here to go back</u>
-            </div>
+            <TimedFallback
+                timeoutMs={JOIN_TIMEOUT_MS}
+                loading={<StatusScreen loading title="Joining game…" message="Getting you back to the table." />}
+                fallback={<NotFound title="Game not found" message="This game may have already ended, or the link is no longer valid." />}
+            />
         )
     }
 
@@ -134,8 +141,8 @@ const Game = () => {
             <div className="table-felt">
                 <div className="felt">
                     {playedHands}
-                    <Deck deck={game.deck} trump={game.trump} />
-                    { messageState && <p className='game-message'>{message}</p> }
+                    <Deck count={game.deckCount} trump={game.trump} />
+                    { message && <p className='game-message'>{message}</p> }
                 </div>
             </div>
 
@@ -190,6 +197,7 @@ const formatRemaining = (seconds: number | null): string => {
     return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+// Must match MAX_DAVI in server/src/game.ts — the server enforces the cap.
 const MAX_DAVI = 11
 
 // Old Iranian counting words used for the davi (doubling) levels.

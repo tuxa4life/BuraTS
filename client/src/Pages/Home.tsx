@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useUser } from '../Context/userContext'
-import { useSockets } from '../Context/socketContext'
+import { useUser } from '../Context/useUser'
+import { useSockets } from '../Context/useSockets'
 import { useNavigate } from 'react-router-dom'
 import '../styles/home.css'
 import Img from './Components/Img'
@@ -13,7 +13,7 @@ const Home = () => {
     
     useEffect(() => {
         getRooms()
-    }, [])
+    }, [getRooms])
 
     const handleCreateRoom = () => {
         joinRoom(roomId)
@@ -46,7 +46,7 @@ const Home = () => {
                     <h3 className="section-title">Create New Room</h3>
 
                     <div className="create-room-form">
-                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase().replace(' ', '').slice(0, 14))} placeholder="Enter room ID..." className="room-input" />
+                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase().replace(/\s/g, '').slice(0, 14))} placeholder="Enter room ID..." className="room-input" />
                         <button onClick={handleCreateRoom} disabled={!roomId.trim()} className={`create-button ${!roomId.trim() ? 'disabled' : ''}`}>
                             Create Room
                         </button>

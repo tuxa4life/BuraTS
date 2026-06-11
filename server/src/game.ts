@@ -1,7 +1,8 @@
-import { type Room, type Card } from '../types.js'
+import { type Room, type Card, type Player } from '../types.js'
 import { determineWinner, gatherPlayedCards, generateKeys, getCardPoints, shuffleDeck } from './cards.js'
 
 // Highest davi level and the score that ends the whole game.
+// MAX_DAVI is mirrored in client/src/Pages/Game.tsx for button visibility only.
 const MAX_DAVI = 11
 const WIN_SCORE = 11
 
@@ -45,14 +46,62 @@ const startGame = (room: Room) => {
     dealHand(room)
 }
 
+// True when every card in `hand` exists in `playerHand`, counting multiplicity
+// (so a card the player holds once can't be played twice in the same hand).
+const handIsOwned = (hand: Card[], playerHand: Card[]): boolean => {
+    const remaining = playerHand.map((c) => `${c.suite}_${c.value}`)
+    return hand.every((c) => {
+        const i = remaining.indexOf(`${c.suite}_${c.value}`)
+        if (i === -1) return false
+        remaining.splice(i, 1)
+        return true
+    })
+}
+
+// Server-side authority for a play attempt. The client checks the same rules
+// for UX, but only this check is binding: it must be the player's turn, they
+// must not have already played into the current trick, every card must come
+// from their own hand, a lead must be single-suited, and a follow must match
+// the lead's card count. A genuine Bura (five trumps from hand) is exempt
+// from the lead/follow shape rules, matching how it could always be declared.
+const validatePlay = (room: Room, playerIndex: number, hand: Card[]): boolean => {
+    if (!room.started || room.paused || room.davi.pending) return false
+    if (room.turn !== playerIndex) return false
+
+    const player = room.players[playerIndex]
+    if (!player) return false
+    if (player.played.length !== 0) return false
+
+    if (hand.length === 0 || hand.length > 5) return false
+    if (!handIsOwned(hand, player.hand)) return false
+
+    if (isBura(room, hand)) return true
+
+    const leadCount = room.players.find((p) => p.played.length > 0)?.played.length
+    if (leadCount === undefined) {
+        // Leading the trick: all cards must share one suite.
+        return hand.every((c) => c.suite === hand[0]!.suite)
+    }
+    return hand.length === leadCount
+}
+
+// Moves the played cards from the player's hand to their played pile. Keeps
+// the server's own card instances (matched by suite/value) so client-supplied
+// objects — and any spoofed fields on them — never enter the room state.
+const applyPlay = (player: Player, hand: Card[]) => {
+    const isPlayed = (card: Card) => hand.some((h) => h.suite === card.suite && h.value === card.value)
+    player.played = player.hand.filter(isPlayed)
+    player.hand = player.hand.filter((card) => !isPlayed(card))
+}
+
 // Records a single play and advances the turn. Does NOT resolve a completed
 // trick — that is deferred (see resolveTrick) so all four cards can be shown
 // for a moment before the winner takes them.
 const handlePlayedHand = (hand: Card[], room: Room): { allPlayed: boolean } => {
-    const player = room?.players[room.turn!]
-    player!.played = hand
-    player!.hand = player!.hand.filter((card) => !hand.some((h) => h.suite === card.suite && h.value === card.value))
-    room!.turn = (room?.turn! + 1) % 4
+    const player = room.players[room.turn!]
+    if (!player) return { allPlayed: false }
+    applyPlay(player, hand)
+    room.turn = (room.turn! + 1) % 4
 
     const allPlayed = room.players.every((player) => player.played.length !== 0)
     return { allPlayed }
@@ -246,4 +295,4 @@ const dealHand = (room: Room) => {
     }
 }
 
-export { startGame, handlePlayedHand, resolveTrick, startRound, handleRoundOver, offerDavi, respondDavi, isBura, handleBura, resetRoomToLobby }
+export { startGame, handlePlayedHand, resolveTrick, startRound, handleRoundOver, offerDavi, respondDavi, isBura, handleBura, resetRoomToLobby, validatePlay, applyPlay }

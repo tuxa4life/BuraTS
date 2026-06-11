@@ -9,18 +9,21 @@ export type Room = {
     playerCount: number
 }
 
+// Mirrors the server's wire format (GameView/PlayerView in server/types.ts):
+// the server only ever sends this client's own hand and counts for everything
+// hidden (other hands, the deck) — keep the two files in sync.
 export type Game = {
     id: string,
     players: Player[],
-    deck: Card[],
+    deckCount: number,
     turn: number | null,
-    trump: Card | null,
+    trump: Card | undefined,
     lastWinner: number
     multiplier: number,
     started: boolean,
     paused: boolean,
     disconnected: string[],
-    pauseEndsAt: number | null,
+    pauseEndsAt: number | undefined,
     davi: {
         pending: boolean,
         from: number | undefined,
@@ -34,9 +37,9 @@ export type Player = {
     picture: string,
     username: string,
     team: number,
-    hand: Card[],
+    hand: Card[],      // full for yourself, [] for everyone else
+    handCount: number,
     played: Card[],
-    taken: Card[][],
     points: number
 }
 

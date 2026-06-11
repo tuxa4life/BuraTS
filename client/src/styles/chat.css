@@ -29,8 +29,10 @@
 }
 
 .chat-toggle.open {
-    /* When the desktop sidebar is open, sit just left of its edge. */
-    right: calc(360px + 20px);
+    /* Desktop sidebar has its own close button in the header — hide the
+       floating toggle so there's only one way to close. (Mobile re-shows it,
+       see the media query below.) */
+    display: none;
 }
 
 .chat-badge {
@@ -268,6 +270,7 @@
 
     .chat-toggle.open {
         /* Keep the toggle reachable above the fullscreen overlay. */
+        display: flex;
         top: 14px;
         right: 14px;
         z-index: 1100;
