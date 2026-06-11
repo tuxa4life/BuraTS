@@ -50,6 +50,15 @@ export type GameOver = {
     teams: GameOverTeam[]
 }
 
+export type ChatMessage = {
+    id: string
+    senderId: string
+    username: string
+    picture: string
+    text: string
+    at: number
+}
+
 export type Suite = 'spades' | 'hearts' | 'clubs' | 'diamonds'
 export type Card = {
     suite: Suite,

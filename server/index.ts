@@ -274,6 +274,26 @@ io.on('connection', (socket: Socket) => {
         }, TRICK_REVEAL_MS)
     })
 
+    socket.on('chat-message', (text: string) => {
+        const roomID = socket.data.roomID
+        const room = rooms[roomID]
+        if (!room) return
+        if (!room.players.some((p) => p.id === socket.data.id)) return
+
+        const trimmed = (text ?? '').toString().trim().slice(0, 500)
+        if (!trimmed) return
+
+        const message = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            senderId: socket.data.id,
+            username: socket.data.username,
+            picture: socket.data.picture,
+            text: trimmed,
+            at: Date.now(),
+        }
+        io.to(roomID).emit('chat-message', message)
+    })
+
     socket.on('davi-offer', () => {
         const room = rooms[socket.data.roomID]
         if (!room) return

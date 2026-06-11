@@ -9,12 +9,13 @@ import Scoreboard from './Components/Scoreboard'
 import { useEffect, useState } from 'react'
 import type { Card } from '../types'
 import PlayedCards from './Components/PlayedCards'
+import Chat from './Components/Chat'
 
 const Game = () => {
     const [selected, setSelected] = useState<Card[]>([])
     const [remaining, setRemaining] = useState<number | null>(null)
 
-    const { game, message, messageState, gameOver, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom } = useSockets()
+    const { game, message, messageState, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom } = useSockets()
     const { user } = useUser()
     const navigate = useNavigate()
     const { roomID } = useParams()
@@ -123,6 +124,8 @@ const Game = () => {
 
     return (
         <div className="game-container">
+            <Chat messages={chatMessages} sendChat={sendChat} currentUserId={user?.id} />
+
             <div className="top-bar">
                 <Scoreboard players={game.players} />
                 <div className="opponents-row">{opponentCards}</div>
