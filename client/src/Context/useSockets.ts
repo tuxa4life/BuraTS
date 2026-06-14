@@ -12,7 +12,7 @@ export interface SocketContextInterface {
     getRooms(): void
     registerOnSockets(user: User): void
     joinRoom(roomID: string): void
-    leaveRoom(): void
+    leaveRoom(mode?: 'step-away' | 'quit'): void
     triggerStart(): void
     setTeam(team: number): void
     playHand(hand: Card[], myIndex: number): void

@@ -210,6 +210,16 @@
     box-shadow: 0 4px 12px var(--shadow-primary);
 }
 
+.rejoin-button {
+    background-color: var(--success, #16a34a);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);
+}
+
+.room-status {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
 .empty-state {
     text-align: center;
     padding: 2rem 1rem;

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useSockets } from '../Context/useSockets'
 import '../styles/game.css'
 import PlayerCard from './Components/PlayerCard'
@@ -21,9 +21,22 @@ const JOIN_TIMEOUT_MS = 10 * 1000
 const Game = () => {
     const [selected, setSelected] = useState<Card[]>([])
 
-    const { game, message, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom } = useSockets()
+    const { game, message, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom, leaveRoom } = useSockets()
     const { user } = useUser()
     const { roomID } = useParams()
+    const navigate = useNavigate()
+
+    // Leave prompt: stepping away keeps the seat (game pauses, rejoinable);
+    // quitting forfeits and ends the game for all four players.
+    const [showLeave, setShowLeave] = useState(false)
+    const handleStepAway = () => {
+        leaveRoom('step-away')
+        navigate('/')
+    }
+    const handleQuit = () => {
+        leaveRoom('quit')
+        navigate('/')
+    }
 
     // Re-attach this socket to the room on (re)mount — e.g. after a refresh or
     // reconnect — so the server can clear our disconnected flag and resume.
@@ -133,6 +146,8 @@ const Game = () => {
         <div className="game-container">
             <Chat messages={chatMessages} sendChat={sendChat} currentUserId={user?.id} />
 
+            <button className="leave-game-button" onClick={() => setShowLeave(true)}>Leave</button>
+
             <div className="top-bar">
                 <Scoreboard players={game.players} />
                 <div className="opponents-row">{opponentCards}</div>
@@ -172,6 +187,21 @@ const Game = () => {
                         ) : (
                             <p className="pause-note">Waiting for {daviToName} response…</p>
                         )}
+                    </div>
+                </div>
+            )}
+
+            { showLeave && (
+                <div className="pause-overlay">
+                    <div className="pause-card">
+                        <h2>Leave the game?</h2>
+                        <p><strong>Step away</strong> keeps your seat — the game pauses and you can rejoin from the menu within the reconnect window.</p>
+                        <p><strong>Quit</strong> ends the game for everyone right away.</p>
+                        <div className="davi-actions">
+                            <button className="davi-button accept" onClick={handleStepAway}>Step away</button>
+                            <button className="davi-button decline" onClick={handleQuit}>Quit game</button>
+                            <button className="davi-button raise" onClick={() => setShowLeave(false)}>Cancel</button>
+                        </div>
                     </div>
                 </div>
             )}

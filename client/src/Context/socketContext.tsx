@@ -137,9 +137,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         socket.emit('set-team', team)
     }, [])
 
-    const leaveRoom = useCallback(() => {
+    // mode is forwarded to the server: 'step-away' (default) keeps your seat in
+    // a started game so you can rejoin; 'quit' forfeits and ends it for everyone.
+    const leaveRoom = useCallback((mode?: 'step-away' | 'quit') => {
         joinedRoomRef.current = null
-        socket.emit('leave-room')
+        socket.emit('leave-room', mode)
         // Drop everything tied to the room we just left so a later lobby/game
         // doesn't briefly render the previous room's state.
         setGame(null)

@@ -98,11 +98,18 @@ const leaveRoom = (socket: Socket, rooms: Record<string, Room>) => {
     }
 }
 
+// Public room summary for the menu. Exposes `started` (lobby vs in-progress)
+// and a minimal member list so the client can tell which rooms the viewer
+// belongs to (→ a "Rejoin" affordance) and which are open lobbies to join.
+// No game state (hands, deck, points) leaks here — just who is seated.
 const getRooms = (rooms: Record<string, Room>) => {
     const output = Object.keys(rooms).map((key) => {
+        const room = rooms[key]
         return {
             id: key,
-            playerCount: rooms[key]?.players.length,
+            playerCount: room?.players.length ?? 0,
+            started: room?.started ?? false,
+            players: room?.players.map((p) => ({ id: p.id, username: p.username, picture: p.picture })) ?? [],
         }
     })
 

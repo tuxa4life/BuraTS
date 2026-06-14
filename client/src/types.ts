@@ -4,9 +4,14 @@ export type User = {
     picture: string
 }
 
+// Menu-level room summary (mirrors getRooms in server/src/rooms.ts). `started`
+// separates open lobbies from in-progress games; `players` lets the client tell
+// which rooms the current user belongs to so it can offer a Rejoin instead of Join.
 export type Room = {
     id: string
     playerCount: number
+    started: boolean
+    players: { id: string; username: string; picture: string }[]
 }
 
 // Mirrors the server's wire format (GameView/PlayerView in server/types.ts):

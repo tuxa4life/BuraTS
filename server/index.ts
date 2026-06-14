@@ -65,12 +65,12 @@ const pauseForPlayer = (roomID: string, userId: string) => {
     emitGameData(roomID)
 }
 
-const abortGame = (roomID: string) => {
+const abortGame = (roomID: string, reason = 'reconnect window expired') => {
     clearPauseTimer(roomID)
     const room = rooms[roomID]
     if (!room) return
 
-    console.log(`Aborting game in room "${roomID}" (reconnect window expired)`)
+    console.log(`Aborting game in room "${roomID}" (${reason})`)
     io.to(roomID).emit('game-aborted')
     io.in(roomID).socketsLeave(roomID)
     delete rooms[roomID]
@@ -121,6 +121,24 @@ io.on('connection', (socket: Socket) => {
         // The client sanitises room IDs, but nothing stops a handcrafted emit —
         // enforce the same guarantees here (non-empty, short, no whitespace).
         if (typeof roomID !== 'string' || roomID.length === 0 || roomID.length > 14 || /\s/.test(roomID)) return
+
+        // One room per player: if this socket is already seated in a *different*
+        // room it must not end up in two. A lobby seat is freed automatically so
+        // the player can move on; a seat in a started game is protected — reject
+        // the join so an in-progress game isn't silently abandoned (the player
+        // must leave or quit it explicitly first).
+        const currentRoomID = socket.data.roomID
+        if (currentRoomID && currentRoomID !== roomID) {
+            const current = rooms[currentRoomID]
+            if (current?.players.some((p) => p.id === socket.data.id)) {
+                if (current.started) {
+                    console.log(`${socket.data.username} is in a started game (${currentRoomID}); refusing join to ${roomID}`)
+                    return
+                }
+                leaveRoom(socket, rooms)
+                emitGameData(currentRoomID)
+            }
+        }
 
         const room = rooms[roomID]
         const alreadyInRoom = !!room && room.players.some((p) => p.id === socket.data.id)
@@ -194,15 +212,27 @@ io.on('connection', (socket: Socket) => {
         emitGameData(roomID)
     })
 
-    socket.on('leave-room', () => {
+    // mode distinguishes the two ways to leave a started game:
+    //   'step-away' (default) — keep the seat, pause, allow a rejoin
+    //   'quit'                 — forfeit and end the game for all four players
+    // In a lobby (not started) both behave the same: the player is removed.
+    socket.on('leave-room', (mode?: 'step-away' | 'quit') => {
         const roomID = socket.data.roomID
         const room = rooms[roomID]
 
-        // Leaving a started game must not free the seat — the 4-player
-        // invariants would break and round bookkeeping would crash on the
-        // missing player. Treat it like a disconnect instead: keep the seat,
-        // pause, and let the reconnect window (or the abort timer) decide.
         if (room?.started && room.players.some((p) => p.id === socket.data.id)) {
+            // Quitting tears the whole game down immediately rather than making
+            // the other three wait out the reconnect window for someone who
+            // chose to leave for good.
+            if (mode === 'quit') {
+                abortGame(roomID, `${socket.data.username} quit`)
+                return
+            }
+
+            // Step away: don't free the seat — the 4-player invariants would
+            // break and round bookkeeping would crash on the missing player.
+            // Treat it like a disconnect: keep the seat, pause, and let the
+            // reconnect window (or the abort timer) decide.
             socket.leave(roomID)
             socket.data.roomID = undefined
             pauseForPlayer(roomID, socket.data.id)
