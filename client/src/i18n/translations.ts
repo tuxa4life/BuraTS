@@ -101,6 +101,11 @@ const en = {
     'chat.send': 'Send message',
     'chat.empty': 'No messages yet. Say hello 👋',
     'chat.placeholder': 'Type a message…',
+
+    // Toast (transient validation errors)
+    'toast.signInRequired': 'You must be signed in',
+    'toast.sameCardCount': 'You must play the same number of cards',
+    'toast.sameSuit': 'You must play cards of the same suit',
 }
 
 export type TranslationKey = keyof typeof en
@@ -191,6 +196,11 @@ const ka: Record<TranslationKey, string> = {
     'chat.send': 'გაგზავნა',
     'chat.empty': 'ჯერ შეტყობინებები არ არის. მიესალმეთ 👋',
     'chat.placeholder': 'დაწერეთ შეტყობინება…',
+
+    // Toast (transient validation errors)
+    'toast.signInRequired': 'ჯერ უნდა შეხვიდეთ სისტემაში',
+    'toast.sameCardCount': 'უნდა ითამაშოთ იმავე რაოდენობის კარტი',
+    'toast.sameSuit': 'უნდა ითამაშოთ ერთი მასტის კარტები',
 }
 
 export const translations: Record<Lang, Record<TranslationKey, string>> = { en, ka }

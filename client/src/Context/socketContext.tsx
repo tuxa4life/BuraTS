@@ -4,6 +4,7 @@ import type { Card, ChatMessage, Game, GameOver, Room, User } from '../types'
 import { useNavigate } from 'react-router-dom'
 import { loadStoredUser } from '../utils/storage'
 import { SocketContext } from './useSockets'
+import { useToast } from './useToast'
 
 const socket = io(import.meta.env.VITE_RENDER_URL || 'http://localhost:5000')
 
@@ -28,6 +29,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const joinedRoomRef = useRef<string | null>(null)
 
     const navigate = useNavigate()
+    const { showToast } = useToast()
 
     useEffect(() => {
         socket.on('connect', () => {
@@ -113,7 +115,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const joinRoom = useCallback((roomID: string) => {
         const user = loadStoredUser()
         if (!user) {
-            alert('MUST BE REGISTERED')
+            showToast('toast.signInRequired')
             return
         }
 
@@ -127,7 +129,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
         joinedRoomRef.current = roomID
         socket.emit('join-room', roomID)
-    }, [])
+    }, [showToast])
 
     const triggerStart = useCallback(() => {
         socket.emit('start-triggered')
@@ -161,17 +163,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         const prevPlayedCount = game.players[prevIndex].played.length
 
         if (!firstToPlay && hand.length !== prevPlayedCount) {
-            alert('You must play same number of cards!')
+            showToast('toast.sameCardCount')
             return
         }
 
         if (firstToPlay && !sameSuite) {
-            alert('You must play same suite cards!')
+            showToast('toast.sameSuit')
             return
         }
 
         socket.emit('hand-played', hand)
-    }, [game])
+    }, [game, showToast])
 
     const offerDavi = useCallback(() => {
         socket.emit('davi-offer')

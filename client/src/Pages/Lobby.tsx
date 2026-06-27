@@ -8,6 +8,7 @@ import NotFound from './Components/NotFound'
 import StatusScreen, { TimedFallback } from './Components/StatusScreen'
 import type { Player } from '../types'
 import { useLanguage } from '../i18n/useLanguage'
+import { useToast } from '../Context/useToast'
 
 // How long to keep showing "Joining…" before concluding the room isn't there.
 // The connection gate in App already guarantees the socket is up, so a real
@@ -18,6 +19,7 @@ const Lobby = () => {
     const { game, leaveRoom, joinRoom, triggerStart, setTeam } = useSockets()
     const { user } = useUser()
     const { t } = useLanguage()
+    const { showToast } = useToast()
     const [copied, setCopied] = useState(false)
 
     const navigate = useNavigate()
@@ -54,7 +56,7 @@ const Lobby = () => {
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
             })
-            .catch(() => alert(t('lobby.cannotCopy')))
+            .catch(() => showToast('lobby.cannotCopy'))
     }
 
     const handleStartGame = () => {

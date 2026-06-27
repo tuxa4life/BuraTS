@@ -6,6 +6,7 @@ import { useUser } from '../Context/useUser'
 import { useEffect } from 'react'
 import { loadStoredUser } from '../utils/storage'
 import { useLanguage } from '../i18n/useLanguage'
+import { useToast } from '../Context/useToast'
 
 interface JwtData {
     name: string
@@ -16,6 +17,7 @@ interface JwtData {
 const Login = () => {
     const { setUser } = useUser()
     const { t } = useLanguage()
+    const { showToast } = useToast()
     const navigate = useNavigate()
 
     const handleResponse = (resp: CredentialResponse): void => {
@@ -43,7 +45,7 @@ const Login = () => {
                 <p className="login-subtitle">{t('login.subtitle')}</p>
 
                 <div className="login-wrapper">
-                    <GoogleLogin onSuccess={handleResponse} onError={() => alert(t('login.error'))} />
+                    <GoogleLogin onSuccess={handleResponse} onError={() => showToast('login.error')} />
                 </div>
             </div>
         </div>
