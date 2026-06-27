@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChatMessage } from '../../types'
 import Img from './Img'
 import '../../styles/chat.css'
+import { useLanguage } from '../../i18n/useLanguage'
 
 type ChatProps = {
     messages: ChatMessage[]
@@ -10,6 +11,7 @@ type ChatProps = {
 }
 
 const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
+    const { t } = useLanguage()
     const [open, setOpenRaw] = useState(false)
     const [draft, setDraft] = useState('')
     const [isFullscreen, setIsFullscreen] = useState(false)
@@ -63,7 +65,7 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
             <button
                 className={`chat-toggle ${open ? 'open' : ''}`}
                 onClick={() => setOpen(!open)}
-                aria-label={open ? 'Close chat' : 'Open chat'}
+                aria-label={open ? t('chat.close') : t('chat.open')}
             >
                 {open ? <CloseIcon /> : <ChatIcon />}
                 {!open && unread > 0 && <span className="chat-badge">{unread > 9 ? '9+' : unread}</span>}
@@ -71,16 +73,16 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
 
             <div className={`chat-panel ${open ? 'open' : ''}`} role="dialog" aria-hidden={!open}>
                 <header className="chat-header">
-                    <h3>Chat</h3>
+                    <h3>{t('chat.title')}</h3>
                     <div className="chat-header-actions">
                         <button
                             className="chat-close"
                             onClick={toggleFullscreen}
-                            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                            aria-label={isFullscreen ? t('chat.exitFullscreen') : t('chat.enterFullscreen')}
                         >
                             {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                         </button>
-                        <button className="chat-close" onClick={() => setOpen(false)} aria-label="Close chat">
+                        <button className="chat-close" onClick={() => setOpen(false)} aria-label={t('chat.close')}>
                             <CloseIcon />
                         </button>
                     </div>
@@ -88,7 +90,7 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
 
                 <div className="chat-messages" ref={listRef}>
                     {messages.length === 0 ? (
-                        <p className="chat-empty">No messages yet. Say hello 👋</p>
+                        <p className="chat-empty">{t('chat.empty')}</p>
                     ) : (
                         messages.map((m) => {
                             const mine = m.senderId === currentUserId
@@ -114,10 +116,10 @@ const Chat = ({ messages, sendChat, currentUserId }: ChatProps) => {
                         className="chat-input"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
-                        placeholder="Type a message…"
+                        placeholder={t('chat.placeholder')}
                         maxLength={500}
                     />
-                    <button className="chat-send" type="submit" disabled={!draft.trim()} aria-label="Send message">
+                    <button className="chat-send" type="submit" disabled={!draft.trim()} aria-label={t('chat.send')}>
                         <SendIcon />
                     </button>
                 </form>

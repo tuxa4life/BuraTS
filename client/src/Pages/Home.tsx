@@ -4,11 +4,13 @@ import { useSockets } from '../Context/useSockets'
 import { useNavigate } from 'react-router-dom'
 import '../styles/home.css'
 import Img from './Components/Img'
+import { useLanguage } from '../i18n/useLanguage'
 
 const Home = () => {
     const [roomId, setRoomId] = useState('')
     const { user, logOut } = useUser()
     const { rooms, joinRoom, getRooms } = useSockets()
+    const { t } = useLanguage()
     const navigate = useNavigate()
     
     useEffect(() => {
@@ -34,7 +36,7 @@ const Home = () => {
     }
 
     if (!user) {
-        return <div>Loading...</div>
+        return <div>{t('common.loading')}</div>
     }
 
     // "Your Games": rooms the user is seated in (typically a started game they
@@ -55,23 +57,23 @@ const Home = () => {
                         <h2 className="user-name">{user.username}</h2>
                         <p className="user-id">ID: {user.id}</p>
                     </div>
-                    <button className="logout-button" onClick={logOut}>Log Out</button>
+                    <button className="logout-button" onClick={logOut}>{t('home.logOut')}</button>
                 </div>
 
                 <div className="create-room-section">
-                    <h3 className="section-title">Create New Room</h3>
+                    <h3 className="section-title">{t('home.createNewRoom')}</h3>
 
                     <div className="create-room-form">
-                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase().replace(/\s/g, '').slice(0, 14))} placeholder="Enter room ID..." className="room-input" />
+                        <input type="text" value={roomId} onChange={(e) => setRoomId(e.target.value.toLowerCase().replace(/\s/g, '').slice(0, 14))} placeholder={t('home.roomIdPlaceholder')} className="room-input" />
                         <button onClick={handleCreateRoom} disabled={!roomId.trim()} className={`create-button ${!roomId.trim() ? 'disabled' : ''}`}>
-                            Create Room
+                            {t('home.createRoom')}
                         </button>
                     </div>
                 </div>
 
                 {myGames.length > 0 && (
                     <div className="rooms-list-section">
-                        <h3 className="section-title">Your Games ({myGames.length})</h3>
+                        <h3 className="section-title">{t('home.yourGames', { count: myGames.length })}</h3>
 
                         <div className="rooms-list">
                             {myGames.map((room) => (
@@ -79,15 +81,15 @@ const Home = () => {
                                     <div className="room-info">
                                         <h4 className="room-name">{room.id}</h4>
                                         <div className="room-players">
-                                            <span className="room-status">{room.started ? 'In progress' : 'In lobby'}</span>
+                                            <span className="room-status">{room.started ? t('home.inProgress') : t('home.inLobby')}</span>
                                             <span>
-                                                {room.playerCount} {room.playerCount === 1 ? 'player' : 'players'}
+                                                {room.playerCount} {room.playerCount === 1 ? t('common.player') : t('common.players')}
                                             </span>
                                         </div>
                                     </div>
 
                                     <button onClick={() => handleRejoin(room)} className="join-button rejoin-button">
-                                        Rejoin
+                                        {t('home.rejoin')}
                                     </button>
                                 </div>
                             ))}
@@ -96,7 +98,7 @@ const Home = () => {
                 )}
 
                 <div className="rooms-list-section">
-                    <h3 className="section-title">Available Rooms ({availableRooms.length})</h3>
+                    <h3 className="section-title">{t('home.availableRooms', { count: availableRooms.length })}</h3>
 
                     <div className="rooms-list">
                         {availableRooms.map((room) => (
@@ -105,13 +107,13 @@ const Home = () => {
                                     <h4 className="room-name">{room.id}</h4>
                                     <div className="room-players">
                                         <span>
-                                            {room.playerCount} {room.playerCount === 1 ? 'player' : 'players'}
+                                            {room.playerCount} {room.playerCount === 1 ? t('common.player') : t('common.players')}
                                         </span>
                                     </div>
                                 </div>
 
                                 <button onClick={() => handleRoomJoin(room.id)} className="join-button">
-                                    Join Room
+                                    {t('home.joinRoom')}
                                 </button>
                             </div>
                         ))}
@@ -119,7 +121,7 @@ const Home = () => {
 
                     {availableRooms.length === 0 && (
                         <div className="empty-state">
-                            <p>No rooms available. Create one to get started!</p>
+                            <p>{t('home.noRooms')}</p>
                         </div>
                     )}
                 </div>

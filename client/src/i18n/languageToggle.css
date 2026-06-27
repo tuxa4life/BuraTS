@@ -1,0 +1,42 @@
+.lang-toggle--floating {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+}
+
+.lang-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--bg-white-transparent);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 12px var(--shadow-dark);
+    cursor: pointer;
+    font: inherit;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.lang-toggle:hover {
+    border-color: var(--border-medium);
+}
+
+.lang-toggle:active {
+    transform: scale(0.97);
+}
+
+.lang-option {
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-tertiary);
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.lang-option.active {
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+}

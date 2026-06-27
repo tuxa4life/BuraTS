@@ -1,9 +1,11 @@
 import type { Player } from "../../types"
+import { useLanguage } from "../../i18n/useLanguage"
 
 const Scoreboard = ({ players }: { players: Player[] }) => {
+    const { t } = useLanguage()
     return (
         <div className="scoreboard">
-            <h3>Points</h3>
+            <h3>{t('game.points')}</h3>
             <div className="team-score">
                 <span className="team-name">{`${players[0].username} & ${players[2].username}`}</span>
                 <span className="team-points">{players[0].points}</span>

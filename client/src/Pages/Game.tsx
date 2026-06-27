@@ -12,6 +12,7 @@ import PlayedCards from './Components/PlayedCards'
 import Chat from './Components/Chat'
 import NotFound from './Components/NotFound'
 import StatusScreen, { TimedFallback } from './Components/StatusScreen'
+import { useLanguage } from '../i18n/useLanguage'
 
 // How long to keep showing "Joining…" before concluding the game isn't there.
 // The connection gate in App already guarantees the socket is up, so a real
@@ -23,6 +24,7 @@ const Game = () => {
 
     const { game, message, gameOver, chatMessages, sendChat, playHand, offerDavi, respondDavi, dismissGameOver, rematch, joinRoom, leaveRoom } = useSockets()
     const { user } = useUser()
+    const { t } = useLanguage()
     const { roomID } = useParams()
     const navigate = useNavigate()
 
@@ -67,7 +69,7 @@ const Game = () => {
             <div className="game-container">
                 <div className="pause-overlay">
                     <div className="pause-card">
-                        <h2>Game over</h2>
+                        <h2>{t('game.over')}</h2>
                         <p>{gameOver.message}</p>
 
                         <div className="gameover-scores">
@@ -80,8 +82,8 @@ const Game = () => {
                         </div>
 
                         <div className="davi-actions">
-                            <button className="davi-button accept" onClick={rematch}>Rematch</button>
-                            <button className="davi-button decline" onClick={dismissGameOver}>Back to home</button>
+                            <button className="davi-button accept" onClick={rematch}>{t('game.rematch')}</button>
+                            <button className="davi-button decline" onClick={dismissGameOver}>{t('common.backToHome')}</button>
                         </div>
                     </div>
                 </div>
@@ -93,8 +95,8 @@ const Game = () => {
         return (
             <TimedFallback
                 timeoutMs={JOIN_TIMEOUT_MS}
-                loading={<StatusScreen loading title="Joining game…" message="Getting you back to the table." />}
-                fallback={<NotFound title="Game not found" message="This game may have already ended, or the link is no longer valid." />}
+                loading={<StatusScreen loading title={t('game.joining.title')} message={t('game.joining.message')} />}
+                fallback={<NotFound title={t('game.notFound.title')} message={t('game.notFound.message')} />}
             />
         )
     }
@@ -163,7 +165,7 @@ const Game = () => {
 
             <div className="hand-dock">
                 <div className="action-row">
-                    <button onClick={handlePlayHand} className={`play-button ${canShowControls ? 'visible' : ''}`}>PLAY</button>
+                    <button onClick={handlePlayHand} className={`play-button ${canShowControls ? 'visible' : ''}`}>{t('game.play')}</button>
                     <button onClick={handleDavi} className={`multiplier-button ${canShowControls ? 'visible' : ''}`}>{game.multiplier}x</button>
                 </div>
                 <CardSelection selected={selected} setSelected={setSelected} hand={game.players[myIndex].hand} trump={game.trump} />
@@ -173,19 +175,23 @@ const Game = () => {
                 <div className="pause-overlay">
                     <div className="pause-card davi-card">
                         <h2>
-                            {daviFromName} offered <span className="davi-word">{daviWord(davi.level)}</span> to {daviToName}
+                            {/* Interpolate names but leave {word} in place, then split on it so the
+                                davi word keeps its emphasis span regardless of word order per language. */}
+                            {t('game.daviOffered', { from: daviFromName ?? '', to: daviToName ?? '' })
+                                .split('{word}')
+                                .flatMap((part, i) => (i === 0 ? [part] : [<span key={i} className="davi-word">{daviWord(davi.level)}</span>, part]))}
                         </h2>
 
                         {amChallenged ? (
                             <div className="davi-actions">
-                                <button className="davi-button accept" onClick={() => respondDavi('accept')}>Accept</button>
+                                <button className="davi-button accept" onClick={() => respondDavi('accept')}>{t('game.accept')}</button>
                                 {canRaiseDavi && (
                                     <button className="davi-button raise" onClick={() => respondDavi('challenge')}>{daviWord(davi.level + 1)}</button>
                                 )}
-                                <button className="davi-button decline" onClick={() => respondDavi('decline')}>Decline</button>
+                                <button className="davi-button decline" onClick={() => respondDavi('decline')}>{t('game.decline')}</button>
                             </div>
                         ) : (
-                            <p className="pause-note">Waiting for {daviToName} response…</p>
+                            <p className="pause-note">{t('game.waitingResponse', { name: daviToName ?? '' })}</p>
                         )}
                     </div>
                 </div>
@@ -194,13 +200,13 @@ const Game = () => {
             { showLeave && (
                 <div className="pause-overlay">
                     <div className="pause-card">
-                        <h2>Leave the game?</h2>
-                        <p><strong>Step away</strong> keeps your seat — the game pauses and you can rejoin from the menu within the reconnect window.</p>
-                        <p><strong>Quit</strong> ends the game for everyone right away.</p>
+                        <h2>{t('game.leaveTitle')}</h2>
+                        <p><strong>{t('game.stepAway')}</strong> {t('game.stepAwayDesc')}</p>
+                        <p><strong>{t('game.quit')}</strong> {t('game.quitDesc')}</p>
                         <div className="davi-actions">
-                            <button className="davi-button accept" onClick={handleStepAway}>Step away</button>
-                            <button className="davi-button decline" onClick={handleQuit}>Quit game</button>
-                            <button className="davi-button raise" onClick={() => setShowLeave(false)}>Cancel</button>
+                            <button className="davi-button accept" onClick={handleStepAway}>{t('game.stepAway')}</button>
+                            <button className="davi-button decline" onClick={handleQuit}>{t('game.quitGame')}</button>
+                            <button className="davi-button raise" onClick={() => setShowLeave(false)}>{t('game.cancel')}</button>
                         </div>
                     </div>
                 </div>
@@ -209,10 +215,10 @@ const Game = () => {
             { game.paused && (
                 <div className="pause-overlay">
                     <div className="pause-card">
-                        <h2>Game paused</h2>
-                        <p>Waiting for {waitingFor.length ? waitingFor.join(', ') : 'a player'} to reconnect…</p>
+                        <h2>{t('game.paused')}</h2>
+                        <p>{t('game.waitingReconnect', { names: waitingFor.length ? waitingFor.join(', ') : t('game.aPlayer') })}</p>
                         <div className="pause-countdown">{formatRemaining(remaining)}</div>
-                        <p className="pause-note">The game will end and everyone returns to the main page if they don't return in time.</p>
+                        <p className="pause-note">{t('game.pauseNote')}</p>
                     </div>
                 </div>
             )}

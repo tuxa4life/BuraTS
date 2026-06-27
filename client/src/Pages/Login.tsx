@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '../Context/useUser'
 import { useEffect } from 'react'
 import { loadStoredUser } from '../utils/storage'
+import { useLanguage } from '../i18n/useLanguage'
 
 interface JwtData {
     name: string
@@ -14,6 +15,7 @@ interface JwtData {
 
 const Login = () => {
     const { setUser } = useUser()
+    const { t } = useLanguage()
     const navigate = useNavigate()
 
     const handleResponse = (resp: CredentialResponse): void => {
@@ -37,11 +39,11 @@ const Login = () => {
 
             <div className="login-card">
                 <h1 className="login-title">Bura 4 Kaca 5 Karta</h1>
-                <h2 className="login-sub-title">Welcome!</h2>
-                <p className="login-subtitle">Sign in to continue to your account</p>
+                <h2 className="login-sub-title">{t('login.welcome')}</h2>
+                <p className="login-subtitle">{t('login.subtitle')}</p>
 
                 <div className="login-wrapper">
-                    <GoogleLogin onSuccess={handleResponse} onError={() => alert('Cannot login')} />
+                    <GoogleLogin onSuccess={handleResponse} onError={() => alert(t('login.error'))} />
                 </div>
             </div>
         </div>
